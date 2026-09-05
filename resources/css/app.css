@@ -2,3 +2,28 @@
 
 @source "./resources/views/**/*.blade.php";
 @source "./resources/js/**/*.js";
+
+/*
+  Brand palette: deep navy + security blue. Used across the storefront
+  and admin. Clock icons use taper... keep semantic.
+*/
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6fd;
+  --color-brand-200: #bcd0fb;
+  --color-brand-300: #8fb0f8;
+  --color-brand-400: #5a84f2;
+  --color-brand-500: #335de0;
+  --color-brand-600: #2342c9;
+  --color-brand-700: #1d35a3;
+  --color-brand-800: #1b2f80;
+  --color-brand-900: #14254f;
+  --color-brand-950: #0b1631;
+
+  --color-navy-950: #081324;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
