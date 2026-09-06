@@ -2,29 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\SetLocale;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class LocaleController extends Controller
 {
-    public function switch(Request $request, string $locale)
+    public function switch(Request $request, string $locale): RedirectResponse
     {
-        $request->validate([
-            'locale' => ['required', Rule::in(SetLocale::SUPPORTED)],
-        ]);
+        $request->session()->put('locale', $locale);
+        app()->setLocale($locale);
 
-        $target = in_array($locale, SetLocale::SUPPORTED, true) ? $locale : config('app.locale');
+        $backTo = (string) $request->query('back_to');
 
-        $request->session()->put('locale', $target);
-        app()->setLocale($target);
-
-        $back = (string) $request->input('back_to');
-
-        $allowed = str_starts_with($back, '/') && ! str_starts_with($back, '//');
-
-        return $allowed
-            ? redirect($back)
+        return $this->isLocalUrl($request, $backTo)
+            ? redirect($backTo)
             : redirect()->route('home');
+    }
+
+    private function isLocalUrl(Request $request, string $url): bool
+    {
+        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
+            return true;
+        }
+
+        $parts = parse_url($url);
+
+        if ($parts === false || ! isset($parts['scheme'], $parts['host'])) {
+            return false;
+        }
+
+        return in_array($parts['scheme'], ['http', 'https'], true)
+            && $parts['host'] === $request->getHost()
+            && (! isset($parts['port']) || $parts['port'] === $request->getPort());
     }
 }

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <x-favicon />
     <title>{{ isset($title) ? $title.' — '.setting('company_name') : setting('company_name') }}</title>
     <meta name="description" content="{{ setting('hero_subtitle_'.app()->getLocale()) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -11,10 +12,11 @@
 <body class="h-full bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ mobileOpen: false, searchOpen: false }">
 
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-white">
-        Skip to content
+        {{ __('store.skip_to_content') }}
     </a>
 
     <!-- Top bar -->
+    @if (setting('phone') || setting('email'))
     <div class="bg-navy-950 text-slate-300">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs sm:px-6 lg:px-8">
             <div class="flex items-center gap-4">
@@ -25,46 +27,28 @@
                     </a>
                 @endif
                 @if (setting('email'))
-                    <a href="mailto:{{ setting('email') }}" class="hidden items-center gap-1.5 hover:text-white sm:flex">
+                    <a href="mailto:{{ setting('email') }}" class="flex items-center gap-1.5 hover:text-white">
                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                         <span>{{ setting('email') }}</span>
                     </a>
                 @endif
             </div>
 
-            <div class="flex items-center gap-3">
-                @if (app()->getLocale() === 'ar')
-                    <form method="POST" action="{{ route('locale.switch', 'en') }}">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 font-medium text-white hover:bg-white/20" lang="en">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.184"/></svg>
-                            English
-                        </button>
-                    </form>
-                @else
-                    <form method="POST" action="{{ route('locale.switch', 'ar') }}">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 font-medium text-white hover:bg-white/20" lang="ar" dir="rtl">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
-                            العربية
-                        </button>
-                    </form>
-                @endif
-            </div>
         </div>
     </div>
+    @endif
 
     <!-- Main header -->
     <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <div class="flex items-center gap-3">
-                <button @click="mobileOpen = !mobileOpen" type="button" class="-m-2 inline-flex items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:hidden" aria-label="Navigation">
+        <div class="mx-auto flex max-w-[90rem] items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+            <div class="flex shrink-0 items-center gap-3">
+                <button @click="mobileOpen = !mobileOpen" type="button" class="-m-2 inline-flex items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 xl:hidden" aria-label="{{ __('store.navigation') }}" :aria-expanded="mobileOpen" aria-controls="store-mobile-navigation">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
                 </button>
-                @include('components.store.brand')
+                @include('components.store.brand', ['logoClass' => 'h-16 w-16 shrink-0 rounded-full object-cover shadow-md ring-2 ring-brand-100 sm:h-20 sm:w-20'])
             </div>
 
-            <nav class="hidden items-center gap-1 lg:flex">
+            <nav class="hidden items-center gap-1 whitespace-nowrap xl:flex">
                 <a href="{{ route('home') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('home') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                     {{ __('store.home') }}
                 </a>
@@ -115,28 +99,43 @@
                 </a>
             </nav>
 
-            <div class="flex items-center gap-1 sm:gap-2">
-                <button @click="searchOpen = !searchOpen" type="button" class="inline-flex items-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" aria-label="{{ __('store.search') }}">
+            <div class="flex shrink-0 items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 p-1 shadow-sm sm:gap-1 sm:p-1.5" data-header-actions>
+                <a href="{{ route('locale.switch', ['locale' => app()->getLocale() === 'ar' ? 'en' : 'ar', 'back_to' => request()->getRequestUri()]) }}"
+                    class="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-white px-2.5 text-xs font-bold text-brand-800 shadow-sm ring-1 ring-slate-200 transition hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:px-3"
+                    lang="{{ app()->getLocale() === 'ar' ? 'en' : 'ar' }}" dir="{{ app()->getLocale() === 'ar' ? 'ltr' : 'rtl' }}" data-language-switch>
+                    <svg class="hidden h-4 w-4 sm:block" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M3 12h18M12 3c4 5 4 13 0 18M12 3c-4 5-4 13 0 18"/></svg>
+                    {{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}
+                </a>
+                <span class="mx-0.5 h-5 w-px bg-slate-200" aria-hidden="true"></span>
+                <button @click="searchOpen = !searchOpen" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-600" aria-label="{{ __('store.search') }}" :aria-expanded="searchOpen" aria-controls="store-header-search">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                 </button>
 
                 @auth
-                    <a href="{{ route('account.dashboard') }}" class="hidden items-center gap-1.5 rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:inline-flex" title="{{ __('store.account') }}">
+                    <a href="{{ route('account.dashboard') }}" class="hidden h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-600 sm:inline-flex" aria-label="{{ __('store.account') }}" title="{{ __('store.account') }}">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </a>
                 @endauth
+                @guest
+                    <a href="{{ route('login') }}" class="hidden h-10 items-center rounded-full px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-white hover:text-brand-700 sm:inline-flex">
+                        {{ __('store.login') }}
+                    </a>
+                    <a href="{{ route('register') }}" class="hidden h-10 items-center rounded-full bg-brand-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-800 sm:inline-flex">
+                        {{ __('store.register') }}
+                    </a>
+                @endguest
 
-                <a href="{{ route('cart.index') }}" class="relative inline-flex items-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" aria-label="{{ __('store.cart') }}">
+                <a href="{{ route('cart.index') }}" class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-600" aria-label="{{ __('store.cart') }}">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
                     @if ($storefrontCartCount > 0)
-                        <span class="absolute -end-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[11px] font-bold text-white" dir="ltr">{{ min($storefrontCartCount, 99) }}</span>
+                        <span class="absolute -end-0.5 -top-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[11px] font-bold text-white ring-2 ring-white" dir="ltr">{{ min($storefrontCartCount, 99) }}</span>
                     @endif
                 </a>
             </div>
         </div>
 
         <!-- Mobile menu -->
-        <div x-show="mobileOpen" x-cloak x-transition class="border-t border-slate-200 bg-white lg:hidden">
+        <div id="store-mobile-navigation" x-show="mobileOpen" x-cloak x-transition class="border-t border-slate-200 bg-white xl:hidden">
             <nav class="mx-auto max-w-7xl space-y-1 px-4 py-3">
                 <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'bg-brand-50 text-brand-700' : 'text-slate-700' }} block rounded-lg px-3 py-2 text-sm font-medium hover:bg-slate-100">{{ __('store.home') }}</a>
                 <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') ? 'bg-brand-50 text-brand-700' : 'text-slate-700' }} block rounded-lg px-3 py-2 text-sm font-medium hover:bg-slate-100">{{ __('store.shop') }}</a>
@@ -150,11 +149,17 @@
                 @auth
                     <a href="{{ route('account.dashboard') }}" class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">{{ __('store.account') }}</a>
                 @endauth
+                @guest
+                    <div class="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+                        <a href="{{ route('login') }}" class="rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">{{ __('store.login') }}</a>
+                        <a href="{{ route('register') }}" class="rounded-lg bg-brand-700 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-brand-800">{{ __('store.register') }}</a>
+                    </div>
+                @endguest
             </nav>
         </div>
 
         <!-- Search bar -->
-        <div x-show="searchOpen" x-cloak x-transition class="border-t border-slate-200 bg-slate-50">
+        <div id="store-header-search" x-show="searchOpen" x-cloak x-transition class="border-t border-slate-200 bg-slate-50">
             <form action="{{ route('shop') }}" method="GET" class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3">
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="{{ __('store.search_placeholder') }}"
                     class="w-full flex-1 rounded-lg border-slate-300 bg-white px-4 py-2 text-sm text-slate-800 focus:border-brand-500 focus:ring-brand-500">
@@ -241,7 +246,7 @@
             </div>
 
             <div class="mt-10 border-t border-white/10 pt-6 text-center text-xs text-slate-500">
-                &copy; {{ date('Y') }} {{ setting('company_name') }}. All rights reserved.
+                &copy; {{ date('Y') }} {{ setting('company_name') }}. {{ __('store.all_rights_reserved') }}
             </div>
         </div>
     </footer>

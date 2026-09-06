@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-@source "./resources/views/**/*.blade.php";
-@source "./resources/js/**/*.js";
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
 
 /*
   Brand palette: deep navy + security blue. Used across the storefront

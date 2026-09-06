@@ -23,6 +23,7 @@ use App\Http\Controllers\Payments\SandboxPaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\ShopController;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -64,7 +65,9 @@ Route::middleware('storefront')->group(function () {
     Route::get('/quote', [QuoteRequestController::class, 'create'])->name('quote.create');
     Route::post('/quote', [QuoteRequestController::class, 'store'])->name('quote.store');
 
-    Route::post('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
+    Route::match(['get', 'post'], '/locale/{locale}', [LocaleController::class, 'switch'])
+        ->whereIn('locale', SetLocale::SUPPORTED)
+        ->name('locale.switch');
 });
 
 /*

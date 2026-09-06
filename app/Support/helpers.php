@@ -27,3 +27,25 @@ if (! function_exists('setting')) {
         return $service->get($normalized, $default);
     }
 }
+
+if (! function_exists('setting_array')) {
+    /**
+     * Read a JSON-array setting safely.
+     *
+     * @return list<string>
+     */
+    function setting_array(string $key): array
+    {
+        $value = setting($key, '[]');
+
+        if (! is_string($value)) {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded)
+            ? array_values(array_filter($decoded, is_string(...)))
+            : [];
+    }
+}

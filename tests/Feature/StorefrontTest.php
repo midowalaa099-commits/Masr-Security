@@ -27,6 +27,32 @@ class StorefrontTest extends TestCase
         $this->get('/login')->assertOk();
     }
 
+    public function test_guest_header_includes_login_and_registration_links_in_both_locales(): void
+    {
+        $this->get(route('home'))
+            ->assertSee(route('login'))
+            ->assertSee(route('register'))
+            ->assertSee(__('store.login'))
+            ->assertSee(__('store.register'))
+            ->assertSee('Skip to content')
+            ->assertSee('aria-label="Navigation"', false)
+            ->assertSee('All rights reserved.')
+            ->assertSee('100%')
+            ->assertSee('24 months')
+            ->assertSee('Cairo');
+
+        $this->withSession(['locale' => 'ar'])
+            ->get(route('home'))
+            ->assertSee('تسجيل الدخول')
+            ->assertSee('إنشاء حساب')
+            ->assertSee('انتقل إلى المحتوى')
+            ->assertSee('aria-label="التنقل"', false)
+            ->assertSee('جميع الحقوق محفوظة.')
+            ->assertSee('١٠٠٪')
+            ->assertSee('٢٤ شهرًا')
+            ->assertSee('القاهرة');
+    }
+
     public function test_category_shop_and_detail_pages_render(): void
     {
         $category = Category::factory()->create();
@@ -84,7 +110,9 @@ class StorefrontTest extends TestCase
 
     public function test_locale_switch_persists_locale(): void
     {
-        $this->post(route('locale.switch', 'ar'))->assertRedirect();
+        $this->post(route('locale.switch', 'ar'))
+            ->assertRedirect()
+            ->assertSessionHas('locale', 'ar');
 
         $this->get(route('home'))->assertOk();
     }

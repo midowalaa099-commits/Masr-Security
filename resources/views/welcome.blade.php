@@ -3,8 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <x-favicon />
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ setting('company_name') ?: 'MASR Security' }}</title>
 
         @fonts
 

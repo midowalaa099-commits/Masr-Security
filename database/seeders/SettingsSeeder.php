@@ -23,6 +23,11 @@ class SettingsSeeder extends Seeder
             'hero_title_ar' => 'أنظمة أمنية احترافية للمنازل والشركات',
             'hero_subtitle_en' => 'Hikvision-authorized distributors. Cameras, recorders, access control and complete installation.',
             'hero_subtitle_ar' => 'موزعون معتمدون من هايكفيجن. كاميرات، مسجلات، تحكم في الدخول وتركيب كامل.',
+            'site_logo' => '',
+            'hero_image' => '',
+            'gallery_images' => '[]',
+            'why_points_en' => '',
+            'why_points_ar' => '',
         ]);
     }
 }

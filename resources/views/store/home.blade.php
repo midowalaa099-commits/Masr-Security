@@ -13,7 +13,7 @@
             </svg>
         </div>
 
-        <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-24">
+        <div class="relative mx-auto grid max-w-[96rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12 lg:px-8 lg:py-20 xl:px-16">
             <div>
                 <span class="inline-flex items-center gap-2 rounded-full border border-brand-400/40 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-200">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
@@ -39,23 +39,30 @@
 
                 <dl class="mt-10 grid max-w-md grid-cols-3 gap-6">
                     <div>
-                        <dt class="text-2xl font-extrabold text-white">100%</dt>
+                        <dt class="text-2xl font-extrabold text-white">{{ __('store.stat_original_value') }}</dt>
                         <dd class="mt-1 text-xs text-slate-400">{{ __('store.stat_original') }}</dd>
                     </div>
                     <div>
-                        <dt class="text-2xl font-extrabold text-white">24m</dt>
+                        <dt class="text-2xl font-extrabold text-white">{{ __('store.stat_warranty_value') }}</dt>
                         <dd class="mt-1 text-xs text-slate-400">{{ __('store.stat_warranty') }}</dd>
                     </div>
                     <div>
-                        <dt class="text-2xl font-extrabold text-white">Cairo</dt>
+                        <dt class="text-2xl font-extrabold text-white">{{ __('store.stat_delivery_value') }}</dt>
                         <dd class="mt-1 text-xs text-slate-400">{{ __('store.stat_delivery') }}</dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="hidden lg:block">
-                @if (($featuredProducts ?? null) && $featuredProducts->first()?->firstImageUrl())
-                    <div class="relative mx-auto max-w-md rotate-2 rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur">
+            <div class="min-w-0">
+                @if (setting('hero_image'))
+                    <div class="relative isolate mx-auto w-full">
+                        <div class="absolute -inset-4 -z-10 rounded-full bg-brand-500/20 blur-3xl" aria-hidden="true"></div>
+                        <div class="rounded-2xl border border-white/20 bg-white/5 p-1.5 shadow-2xl shadow-brand-950/50 sm:rounded-3xl sm:p-2">
+                            <img src="{{ Storage::disk('public')->url(setting('hero_image')) }}" alt="{{ setting('hero_title_'.app()->getLocale()) }}" class="block h-auto w-full rounded-xl object-contain sm:rounded-2xl" fetchpriority="high">
+                        </div>
+                    </div>
+                @elseif (($featuredProducts ?? null) && $featuredProducts->first()?->firstImageUrl())
+                    <div class="relative mx-auto hidden max-w-md rotate-2 rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur lg:block">
                         <img src="{{ $featuredProducts->first()->firstImageUrl() }}" alt="{{ $featuredProducts->first()->trans('name') }}"
                             class="aspect-[4/3] w-full rounded-2xl object-cover">
                         <div class="absolute -bottom-4 -start-4 rounded-2xl bg-white px-4 py-3 shadow-xl">
@@ -64,7 +71,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="relative mx-auto max-w-md rounded-3xl border border-white/10 bg-gradient-to-br from-brand-600/30 to-brand-900/40 p-8 backdrop-blur">
+                    <div class="relative mx-auto hidden max-w-md rounded-3xl border border-white/10 bg-gradient-to-br from-brand-600/30 to-brand-900/40 p-8 backdrop-blur lg:block">
                         <svg class="mx-auto h-32 w-32 text-white/60" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
                         <p class="mt-4 text-center text-sm text-slate-300">{{ __('store.hero_tagline') }}</p>
                     </div>
@@ -142,7 +149,7 @@
             <div class="flex items-end justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900">{{ __('store.featured_packages') }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('store.category_desc') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('store.packages_desc') }}</p>
                 </div>
                 <a href="{{ route('packages.index') }}" class="hidden text-sm font-semibold text-brand-700 hover:text-brand-800 sm:inline">{{ __('store.view_all') }} →</a>
             </div>
@@ -170,6 +177,38 @@
                 <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     @foreach ($displays as $product)
                         <x-store.product-card :product="$product" />
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @php
+        $whyPoints = collect(preg_split('/\R/u', (string) setting('why_points_'.app()->getLocale()), -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn (string $point) => trim($point))
+            ->filter();
+    @endphp
+
+    @if ($whyPoints->isNotEmpty())
+        <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-bold text-slate-900">{{ __('store.why_choose_us') }}</h2>
+            <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                @foreach ($whyPoints as $point)
+                    <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">✓</span>
+                        <p class="text-sm font-medium leading-relaxed text-slate-700">{{ $point }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    @if (setting_array('gallery_images'))
+        <section class="bg-slate-100">
+            <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    @foreach (setting_array('gallery_images') as $image)
+                        <img src="{{ Storage::disk('public')->url($image) }}" alt="" class="aspect-square w-full rounded-2xl object-cover shadow-sm">
                     @endforeach
                 </div>
             </div>

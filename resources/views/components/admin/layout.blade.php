@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <x-favicon />
     <title>{{ isset($title) ? $title.' — '.__('admin.dashboard').' — '.setting('company_name') : __('admin.dashboard').' — '.setting('company_name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -14,17 +15,21 @@
         <div x-show="sidebarOpen" x-cloak x-transition class="fixed inset-0 z-40 bg-navy-950/60 lg:hidden" @click="sidebarOpen = false"></div>
         <aside
             class="fixed inset-y-0 start-0 z-50 flex w-64 transform flex-col bg-navy-950 transition-transform lg:static lg:translate-x-0"
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'">
+            :class="sidebarOpen ? 'translate-x-0' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full'">
 
             <div class="flex items-center justify-between gap-3 px-5 py-5">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5">
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
-                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
-                    </span>
-                    <span class="leading-tight">
-                        <span class="block text-sm font-bold text-white">{{ setting('company_name') ?: 'MASR' }}</span>
-                        <span class="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">{{ __('admin.dashboard') }}</span>
-                    </span>
+                    @if (setting('site_logo'))
+                        <img src="{{ Storage::disk('public')->url(setting('site_logo')) }}" alt="{{ setting('company_name') ?: 'MASR Security' }}" class="h-10 max-w-44 object-contain object-start">
+                    @else
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
+                            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                        </span>
+                        <span class="leading-tight">
+                            <span class="block text-sm font-bold text-white">{{ setting('company_name') ?: 'MASR' }}</span>
+                            <span class="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">{{ __('admin.dashboard') }}</span>
+                        </span>
+                    @endif
                 </a>
                 <button @click="sidebarOpen = false" type="button" class="text-slate-400 hover:text-white lg:hidden" aria-label="Close">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -87,15 +92,9 @@
 
                     <div class="flex items-center gap-3">
                         @if (app()->getLocale() === 'ar')
-                            <form method="POST" action="{{ route('locale.switch', 'en') }}">
-                                @csrf
-                                <button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50" lang="en">English</button>
-                            </form>
+                            <a href="{{ route('locale.switch', ['locale' => 'en', 'back_to' => request()->getRequestUri()]) }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50" lang="en">English</a>
                         @else
-                            <form method="POST" action="{{ route('locale.switch', 'ar') }}">
-                                @csrf
-                                <button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50" lang="ar" dir="rtl">العربية</button>
-                            </form>
+                            <a href="{{ route('locale.switch', ['locale' => 'ar', 'back_to' => request()->getRequestUri()]) }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50" lang="ar" dir="rtl">العربية</a>
                         @endif
 
                         <div class="hidden items-center gap-2.5 sm:flex">
