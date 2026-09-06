@@ -119,7 +119,7 @@ return [
     'stat_warranty' => 'دعم الضمان',
     'stat_warranty_value' => '٢٤ شهرًا',
     'stat_delivery' => 'توصيل لجميع المحافظات',
-    'stat_delivery_value' => 'القاهرة',
+    'stat_delivery_value' => 'جميع المحافظات',
     'why_choose_us' => 'لماذا تختارنا',
     'hero_tagline' => 'كاميرات مراقبة · أجهزة تسجيل · أنظمة تحكم الدخول · شاشات تفاعلية',
     'featured_desc' => 'اختر المنتج الأكثر مبيعاً لمنزلك أو عملك.',

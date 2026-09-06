@@ -7,7 +7,10 @@ use App\Http\Requests\Admin\SettingsUpdateRequest;
 use App\Services\AuditLogger;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
 class AdminSettingsController extends Controller
 {
@@ -60,15 +63,29 @@ class AdminSettingsController extends Controller
             fn (string $key) => [$key => $this->settings->get($key, '')],
         )->all();
 
-        $removedMedia = $this->removeRequestedFiles($request);
+        $stagedPaths = [];
+        $replacedPaths = [];
 
-        $media = $this->storeUploadedFiles($request);
+        try {
+            $removedMedia = $this->removeRequestedFiles($request, $replacedPaths);
+            $media = $this->storeUploadedFiles($request, $stagedPaths, $replacedPaths);
+            $changes = [...$validated, ...$removedMedia, ...$media];
 
-        $changes = [...$validated, ...$removedMedia, ...$media];
+            DB::transaction(function () use ($old, $changes): void {
+                $this->audit->settingsUpdated($old, $changes);
+                $this->settings->setMany($changes);
+            });
+        } catch (Throwable $exception) {
+            foreach ($stagedPaths as $path) {
+                $this->deleteFile($path);
+            }
 
-        $this->audit->settingsUpdated($old, $changes);
+            throw $exception;
+        }
 
-        $this->settings->setMany($changes);
+        foreach (array_unique($replacedPaths) as $path) {
+            $this->deleteFile($path);
+        }
 
         return redirect()->route('admin.settings.edit')->with('success', __('admin.settings_updated'));
     }
@@ -76,7 +93,7 @@ class AdminSettingsController extends Controller
     /**
      * @return array<string, string>
      */
-    private function storeUploadedFiles(SettingsUpdateRequest $request): array
+    private function storeUploadedFiles(SettingsUpdateRequest $request, array &$stagedPaths, array &$replacedPaths): array
     {
         $media = [];
 
@@ -85,22 +102,37 @@ class AdminSettingsController extends Controller
             'hero_image' => 'site/hero',
         ] as $key => $directory) {
             if ($request->hasFile($key)) {
-                $this->deleteFile((string) $this->settings->get($key, ''));
-                $media[$key] = $request->file($key)->store($directory, 'public');
+                $replacedPaths[] = (string) $this->settings->get($key, '');
+                $path = $request->file($key)->store($directory, 'public');
+
+                if ($path === false) {
+                    throw new RuntimeException("Unable to store {$key}.");
+                }
+
+                $stagedPaths[] = $path;
+                $media[$key] = $path;
             }
         }
 
         if ($request->hasFile('gallery_images')) {
             foreach (setting_array('gallery_images') as $image) {
-                $this->deleteFile($image);
+                $replacedPaths[] = $image;
             }
 
-            $media['gallery_images'] = json_encode(
-                collect($request->file('gallery_images'))
-                    ->map(fn ($image) => $image->store('site/gallery', 'public'))
-                    ->all(),
-                JSON_THROW_ON_ERROR,
-            );
+            $paths = [];
+
+            foreach ($request->file('gallery_images') as $image) {
+                $path = $image->store('site/gallery', 'public');
+
+                if ($path === false) {
+                    throw new RuntimeException('Unable to store a gallery image.');
+                }
+
+                $stagedPaths[] = $path;
+                $paths[] = $path;
+            }
+
+            $media['gallery_images'] = json_encode($paths, JSON_THROW_ON_ERROR);
         }
 
         return $media;
@@ -109,7 +141,7 @@ class AdminSettingsController extends Controller
     /**
      * @return array{site_logo?: string, hero_image?: string, gallery_images?: string}
      */
-    private function removeRequestedFiles(SettingsUpdateRequest $request): array
+    private function removeRequestedFiles(SettingsUpdateRequest $request, array &$replacedPaths): array
     {
         $media = [];
 
@@ -118,14 +150,14 @@ class AdminSettingsController extends Controller
             'remove_hero_image' => 'hero_image',
         ] as $input => $key) {
             if ($request->boolean($input)) {
-                $this->deleteFile((string) $this->settings->get($key, ''));
+                $replacedPaths[] = (string) $this->settings->get($key, '');
                 $media[$key] = '';
             }
         }
 
         if ($request->boolean('remove_gallery_images')) {
             foreach (setting_array('gallery_images') as $image) {
-                $this->deleteFile($image);
+                $replacedPaths[] = $image;
             }
 
             $media['gallery_images'] = json_encode([], JSON_THROW_ON_ERROR);

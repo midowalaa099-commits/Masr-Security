@@ -228,4 +228,6 @@ details.
 ## License
 
 This application is open-sourced software licensed under the
-[MIT license](https://opensource.org/licenses/MIT).# Masr-Security
+[MIT license](https://opensource.org/licenses/MIT).
+
+# Masr-Security

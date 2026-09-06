@@ -7,6 +7,7 @@ use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 class BrandSettingsTest extends TestCase
@@ -120,6 +121,49 @@ class BrandSettingsTest extends TestCase
             'new_values->hero_image' => setting('hero_image'),
             'new_values->gallery_images' => setting('gallery_images'),
         ]);
+    }
+
+    public function test_failed_settings_persistence_keeps_existing_brand_files_and_removes_staged_uploads(): void
+    {
+        Storage::fake('public');
+
+        app(SettingsService::class)->setMany([
+            'site_logo' => 'site/branding/logo.png',
+            'hero_image' => 'site/hero/hero.png',
+            'gallery_images' => json_encode(['site/gallery/gallery.png']),
+        ]);
+
+        Storage::disk('public')->put('site/branding/logo.png', 'logo');
+        Storage::disk('public')->put('site/hero/hero.png', 'hero');
+        Storage::disk('public')->put('site/gallery/gallery.png', 'gallery');
+        $existingFiles = Storage::disk('public')->allFiles();
+
+        $settings = $this->partialMock(SettingsService::class);
+        $settings->shouldReceive('setMany')
+            ->once()
+            ->andThrow(new RuntimeException('Settings could not be persisted.'));
+
+        $this->actingAs($this->admin());
+        $this->withoutExceptionHandling();
+        $this->expectException(RuntimeException::class);
+
+        try {
+            $this->put(route('admin.settings.update'), [
+                'site_logo' => UploadedFile::fake()->image('new-logo.png'),
+                'hero_image' => UploadedFile::fake()->image('new-hero.png'),
+                'gallery_images' => [UploadedFile::fake()->image('new-gallery.png')],
+            ]);
+        } finally {
+            $this->assertSame('site/branding/logo.png', setting('site_logo'));
+            $this->assertSame('site/hero/hero.png', setting('hero_image'));
+            $this->assertSame(['site/gallery/gallery.png'], setting_array('gallery_images'));
+            Storage::disk('public')->assertExists([
+                'site/branding/logo.png',
+                'site/hero/hero.png',
+                'site/gallery/gallery.png',
+            ]);
+            $this->assertSame($existingFiles, Storage::disk('public')->allFiles());
+        }
     }
 
     public function test_brand_assets_render_on_the_storefront_homepage(): void

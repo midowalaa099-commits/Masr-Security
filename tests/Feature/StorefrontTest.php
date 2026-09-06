@@ -39,7 +39,7 @@ class StorefrontTest extends TestCase
             ->assertSee('All rights reserved.')
             ->assertSee('100%')
             ->assertSee('24 months')
-            ->assertSee('Cairo');
+            ->assertSee('Nationwide');
 
         $this->withSession(['locale' => 'ar'])
             ->get(route('home'))
@@ -50,7 +50,7 @@ class StorefrontTest extends TestCase
             ->assertSee('جميع الحقوق محفوظة.')
             ->assertSee('١٠٠٪')
             ->assertSee('٢٤ شهرًا')
-            ->assertSee('القاهرة');
+            ->assertSee('جميع المحافظات');
     }
 
     public function test_category_shop_and_detail_pages_render(): void

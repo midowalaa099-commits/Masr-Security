@@ -119,7 +119,7 @@ return [
     'stat_warranty' => 'Warranty support',
     'stat_warranty_value' => '24 months',
     'stat_delivery' => 'Nationwide delivery',
-    'stat_delivery_value' => 'Cairo',
+    'stat_delivery_value' => 'Nationwide',
     'why_choose_us' => 'Why choose us',
     'hero_tagline' => 'CCTV Cameras · NVRs · Access Control · Interactive Displays',
     'featured_desc' => 'Pick a best seller for your property or business.',
