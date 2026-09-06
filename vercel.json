@@ -16,7 +16,24 @@
     ],
     "routes": [
         {
-            "handle": "filesystem"
+            "src": "/build/(.*)",
+            "dest": "/build/$1"
+        },
+        {
+            "src": "/images/(.*)",
+            "dest": "/images/$1"
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "/favicon.ico"
+        },
+        {
+            "src": "/favicon.svg",
+            "dest": "/favicon.svg"
+        },
+        {
+            "src": "/robots.txt",
+            "dest": "/robots.txt"
         },
         {
             "src": "/(.*)",
