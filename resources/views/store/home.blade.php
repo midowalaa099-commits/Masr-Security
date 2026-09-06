@@ -58,7 +58,7 @@
                     <div class="relative isolate mx-auto w-full">
                         <div class="absolute -inset-4 -z-10 rounded-full bg-brand-500/20 blur-3xl" aria-hidden="true"></div>
                         <div class="rounded-2xl border border-white/20 bg-white/5 p-1.5 shadow-2xl shadow-brand-950/50 sm:rounded-3xl sm:p-2">
-                            <img src="{{ Storage::disk('public')->url(setting('hero_image')) }}" alt="{{ setting('hero_title_'.app()->getLocale()) }}" class="block h-auto w-full rounded-xl object-contain sm:rounded-2xl" fetchpriority="high">
+                            <img src="{{ media_url(setting('hero_image')) }}" alt="{{ setting('hero_title_'.app()->getLocale()) }}" class="block h-auto w-full rounded-xl object-contain sm:rounded-2xl" fetchpriority="high">
                         </div>
                     </div>
                 @elseif (($featuredProducts ?? null) && $featuredProducts->first()?->firstImageUrl())
@@ -208,7 +208,7 @@
             <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                     @foreach (setting_array('gallery_images') as $image)
-                        <img src="{{ Storage::disk('public')->url($image) }}" alt="" class="aspect-square w-full rounded-2xl object-cover shadow-sm">
+                        <img src="{{ media_url($image) }}" alt="" class="aspect-square w-full rounded-2xl object-cover shadow-sm">
                     @endforeach
                 </div>
             </div>

@@ -192,6 +192,20 @@ class BrandSettingsTest extends TestCase
             ->assertSee('https://www.facebook.com/profile.php?id=61586652051946');
     }
 
+    public function test_public_brand_assets_render_without_a_storage_prefix(): void
+    {
+        app(SettingsService::class)->setMany([
+            'site_logo' => '/images/branding/masr-security-logo.jpg',
+            'hero_image' => '/images/branding/masr-security-hero.jpg',
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('/images/branding/masr-security-logo.jpg')
+            ->assertSee('/images/branding/masr-security-hero.jpg')
+            ->assertDontSee('/storage/images/branding/');
+    }
+
     public function test_arabic_why_choose_us_preserves_complete_lines_and_unicode_characters(): void
     {
         app(SettingsService::class)->set('why_points_ar', "  كاميرات مراقبة ومسجلات وإكسسوارات\r\n \t\nحلول الشاشات التفاعلية\u{2028}أنظمة أمنية احترافية للمنازل والشركات  ");

@@ -48,7 +48,7 @@
                 <x-input-label for="site_logo" :value="__('admin.site_logo')" />
                 @if ($settings['site_logo'])
                     <div class="mt-2 flex flex-wrap items-center gap-3">
-                        <img src="{{ Storage::disk('public')->url($settings['site_logo']) }}" alt="{{ __('admin.site_logo') }}" class="h-16 max-w-56 rounded-lg border border-slate-200 object-contain p-1">
+                        <img src="{{ media_url($settings['site_logo']) }}" alt="{{ __('admin.site_logo') }}" class="h-16 max-w-56 rounded-lg border border-slate-200 object-contain p-1">
                         <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-600">
                             <input type="checkbox" name="remove_site_logo" value="1" class="rounded border-slate-300 text-brand-700 focus:ring-brand-500">
                             {{ __('admin.remove_logo') }}
@@ -79,7 +79,7 @@
                 <x-input-label for="hero_image" :value="__('admin.hero_image')" />
                 @if ($settings['hero_image'])
                     <div class="mt-2 flex flex-wrap items-center gap-3">
-                        <img src="{{ Storage::disk('public')->url($settings['hero_image']) }}" alt="{{ __('admin.hero_image') }}" class="h-20 w-36 rounded-lg border border-slate-200 object-cover">
+                        <img src="{{ media_url($settings['hero_image']) }}" alt="{{ __('admin.hero_image') }}" class="h-20 w-36 rounded-lg border border-slate-200 object-cover">
                         <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-600"><input type="checkbox" name="remove_hero_image" value="1" class="rounded border-slate-300 text-brand-700 focus:ring-brand-500">{{ __('admin.remove_image') }}</label>
                     </div>
                 @endif
@@ -117,7 +117,7 @@
             @if (setting_array('gallery_images'))
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     @foreach (setting_array('gallery_images') as $image)
-                        <img src="{{ Storage::disk('public')->url($image) }}" alt="" class="aspect-square rounded-lg border border-slate-200 object-cover">
+                        <img src="{{ media_url($image) }}" alt="" class="aspect-square rounded-lg border border-slate-200 object-cover">
                     @endforeach
                 </div>
                 <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-600"><input type="checkbox" name="remove_gallery_images" value="1" class="rounded border-slate-300 text-brand-700 focus:ring-brand-500">{{ __('admin.remove_gallery_images') }}</label>

@@ -8,7 +8,7 @@
 
 <a href="{{ route('home') }}" class="flex items-center gap-2.5">
     @if ($logo)
-        <img src="{{ Storage::disk('public')->url($logo) }}" alt="{{ setting('company_name') ?: 'MASR Security' }}" class="{{ $logoClass }}">
+        <img src="{{ media_url($logo) }}" alt="{{ setting('company_name') ?: 'MASR Security' }}" class="{{ $logoClass }}">
     @else
         <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-800 shadow-md">
             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">

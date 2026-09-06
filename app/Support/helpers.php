@@ -1,6 +1,8 @@
 <?php
 
 use App\Services\SettingsService;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 if (! function_exists('money')) {
     /**
@@ -47,5 +49,23 @@ if (! function_exists('setting_array')) {
         return is_array($decoded)
             ? array_values(array_filter($decoded, is_string(...)))
             : [];
+    }
+}
+
+if (! function_exists('media_url')) {
+    /**
+     * Resolve uploaded media and deployment-safe public assets to a URL.
+     */
+    function media_url(?string $path): string
+    {
+        if (blank($path)) {
+            return '';
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://', '/'])) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 }
