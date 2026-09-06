@@ -32,6 +32,7 @@
         "APP_ROUTES_CACHE": "/tmp/routes.php",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "CACHE_STORE": "database",
+        "DB_CONNECTION": "pgsql",
         "LOG_CHANNEL": "stderr",
         "QUEUE_CONNECTION": "sync",
         "SESSION_DRIVER": "database",
