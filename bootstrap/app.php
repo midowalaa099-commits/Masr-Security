@@ -29,6 +29,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        if (getenv('VERCEL')) {
+            $exceptions->report(function (Throwable $exception): bool {
+                error_log(sprintf(
+                    '[laravel] %s: %s in %s:%d',
+                    $exception::class,
+                    $exception->getMessage(),
+                    $exception->getFile(),
+                    $exception->getLine(),
+                ));
+
+                return false;
+            });
+        }
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
