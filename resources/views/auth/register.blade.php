@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="mb-5 text-center">
+        <h1 class="text-2xl font-extrabold tracking-tight text-navy-950">{{ __('auth_pages.join_masr_security') }}</h1>
+        <p class="mt-1 text-sm text-slate-500">{{ __('auth_pages.register_intro') }}</p>
+    </div>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -35,14 +40,14 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="mt-6 flex items-center justify-between gap-4">
-            <a class="text-sm font-semibold text-brand-700 hover:text-brand-800" href="{{ route('login') }}">
-                {{ __('auth_pages.already_registered') }}
-            </a>
-
-            <x-primary-button class="bg-brand-700 hover:bg-brand-800 focus:bg-brand-800 focus:ring-brand-500">
+        <div class="mt-5 space-y-3">
+            <x-primary-button class="w-full justify-center rounded-xl bg-brand-700 py-3 text-sm normal-case tracking-normal shadow-lg shadow-brand-700/20 hover:bg-brand-800 focus:bg-brand-800 focus:ring-brand-500">
                 {{ __('auth_pages.register') }}
             </x-primary-button>
+
+            <a class="block rounded-xl border border-slate-200 px-5 py-3 text-center text-sm font-bold text-brand-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800" href="{{ route('login') }}">
+                {{ __('auth_pages.already_registered') }} {{ __('auth_pages.login') }}
+            </a>
         </div>
     </form>
 </x-guest-layout>

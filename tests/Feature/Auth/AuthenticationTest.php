@@ -16,8 +16,9 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertSee(asset('images/branding/masr-security-hero.jpg'), false)
+            ->assertDontSee(asset('images/branding/masr-security-hero.jpg'), false)
             ->assertSee(route('locale.switch', ['locale' => 'ar', 'back_to' => '/login']), false)
+            ->assertSee(__('auth_pages.welcome_back'))
             ->assertSee(__('auth_pages.no_account'))
             ->assertSee(__('auth_pages.create_account_now'))
             ->assertSee('href="'.route('register').'"', false);

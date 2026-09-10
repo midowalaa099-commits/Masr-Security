@@ -12,9 +12,10 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-full bg-navy-950 font-sans text-slate-800 antialiased">
-        <main class="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-navy-950 via-brand-950 to-navy-900 px-4 py-5 sm:px-6 lg:h-screen lg:overflow-hidden lg:px-8">
-            <div class="absolute -start-24 top-8 h-72 w-72 rounded-full bg-brand-500/25 blur-3xl" aria-hidden="true"></div>
-            <div class="absolute -end-32 bottom-0 h-96 w-96 rounded-full bg-blue-400/15 blur-3xl" aria-hidden="true"></div>
+        <main class="relative flex min-h-screen items-center justify-center overflow-x-hidden bg-gradient-to-br from-navy-950 via-brand-950 to-navy-900 px-4 py-5 sm:px-6">
+            <div class="absolute -start-24 top-8 h-80 w-80 rounded-full bg-brand-500/25 blur-3xl" aria-hidden="true"></div>
+            <div class="absolute -end-32 bottom-0 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" aria-hidden="true"></div>
+            <div class="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true"></div>
 
             <a
                 href="{{ route('locale.switch', ['locale' => app()->getLocale() === 'ar' ? 'en' : 'ar', 'back_to' => request()->getRequestUri()]) }}"
@@ -26,30 +27,26 @@
                 {{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}
             </a>
 
-            <div class="relative mx-auto grid min-h-[calc(100vh-2.5rem)] w-full max-w-7xl items-center gap-6 lg:min-h-0 lg:h-full lg:grid-cols-[minmax(0,1.2fr)_minmax(24rem,0.8fr)] lg:gap-10">
-                <div class="group relative w-full overflow-hidden rounded-3xl border border-white/15 bg-brand-950 shadow-2xl shadow-black/30">
-                    <div class="pointer-events-none absolute inset-0 z-10 rounded-3xl ring-1 ring-inset ring-white/10" aria-hidden="true"></div>
-                    <img
-                        src="{{ asset('images/branding/masr-security-hero.jpg') }}"
-                        alt="{{ __('auth_pages.security_hero_alt') }}"
-                        class="h-auto w-full object-contain transition duration-700 ease-out group-hover:scale-[1.015]"
-                    >
-                </div>
-
-                <div class="relative mx-auto w-full max-w-md">
-                    <div class="mb-3 flex justify-center">
-                        <div class="rounded-full border-4 border-white/90 bg-navy-950 p-1 shadow-xl shadow-black/35 ring-4 ring-brand-500/15">
-                            @include('components.store.brand', [
-                                'dark' => true,
-                                'logoClass' => 'h-20 w-20 rounded-full object-cover sm:h-24 sm:w-24',
-                            ])
-                        </div>
-                    </div>
-
-                    <div class="overflow-hidden rounded-3xl border border-white/70 bg-white/98 p-5 shadow-2xl shadow-black/25 backdrop-blur sm:p-6">
-                        {{ $slot }}
+            <div class="relative w-full max-w-md">
+                <div class="relative mb-4 flex justify-center">
+                    <div class="absolute inset-x-12 top-1/2 h-px bg-gradient-to-r from-transparent via-brand-300/60 to-transparent" aria-hidden="true"></div>
+                    <div class="relative rounded-full border-4 border-white/90 bg-navy-950 p-1 shadow-2xl shadow-black/40 ring-8 ring-white/5">
+                        @include('components.store.brand', [
+                            'dark' => true,
+                            'logoClass' => 'h-20 w-20 rounded-full object-cover sm:h-24 sm:w-24',
+                        ])
                     </div>
                 </div>
+
+                <div class="relative overflow-hidden rounded-3xl border border-white/80 bg-white/98 p-5 shadow-2xl shadow-black/30 backdrop-blur sm:p-6">
+                    <div class="absolute inset-x-10 top-0 h-1 rounded-b-full bg-gradient-to-r from-brand-400 via-brand-600 to-blue-400" aria-hidden="true"></div>
+                    {{ $slot }}
+                </div>
+
+                <a href="{{ route('home') }}" class="mx-auto mt-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white">
+                    <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                    {{ __('auth_pages.back_to_store') }}
+                </a>
             </div>
         </main>
     </body>
