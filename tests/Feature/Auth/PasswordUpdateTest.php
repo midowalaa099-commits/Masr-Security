@@ -49,17 +49,29 @@ class PasswordUpdateTest extends TestCase
             ->assertRedirect('/profile');
     }
 
-    public function test_website_account_dashboard_shows_the_password_change_form(): void
+    public function test_password_change_has_a_dedicated_account_page(): void
     {
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)
             ->get(route('account.dashboard'))
+            ->assertDontSee(__('auth_pages.account_security'))
+            ->assertDontSee('name="current_password"', false)
+            ->assertSee('href="'.route('account.password').'"', false);
+
+        $this->actingAs($admin)
+            ->get(route('account.password'))
+            ->assertOk()
             ->assertSee(__('auth_pages.account_security'))
             ->assertSee(__('store.change_password'))
-            ->assertSee('href="'.route('account.dashboard').'#account-security"', false)
             ->assertSee(route('password.update'))
             ->assertSee('name="current_password"', false);
+    }
+
+    public function test_guest_cannot_open_the_password_change_page(): void
+    {
+        $this->get(route('account.password'))
+            ->assertRedirect(route('login'));
     }
 
     public function test_admin_can_change_their_password_from_the_website_account_dashboard(): void
@@ -67,14 +79,14 @@ class PasswordUpdateTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)
-            ->from(route('account.dashboard'))
+            ->from(route('account.password'))
             ->put(route('password.update'), [
                 'current_password' => 'password',
                 'password' => 'Stronger-password-2026',
                 'password_confirmation' => 'Stronger-password-2026',
             ])
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('account.dashboard'));
+            ->assertRedirect(route('account.password'));
 
         $this->assertTrue(Hash::check('Stronger-password-2026', $admin->refresh()->password));
     }

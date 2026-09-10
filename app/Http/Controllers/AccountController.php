@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Illuminate\Contracts\View\View;
 
 class AccountController extends Controller
 {
-    public function dashboard()
+    public function dashboard(): View
     {
         $orders = auth()->user()
             ->orders()
@@ -18,7 +19,12 @@ class AccountController extends Controller
         return view('account.dashboard', compact('orders'));
     }
 
-    public function orders()
+    public function password(): View
+    {
+        return view('account.password');
+    }
+
+    public function orders(): View
     {
         $orders = auth()->user()
             ->orders()
@@ -29,7 +35,7 @@ class AccountController extends Controller
         return view('account.orders', compact('orders'));
     }
 
-    public function show(Order $order)
+    public function show(Order $order): View
     {
         $this->authorize('view', $order);
 

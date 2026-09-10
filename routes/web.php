@@ -78,6 +78,7 @@ Route::middleware('storefront')->group(function () {
 
 Route::middleware(['auth', 'storefront'])->prefix('account')->name('account.')->group(function () {
     Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('/password', [AccountController::class, 'password'])->name('password');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}', [AccountController::class, 'show'])->name('orders.show');
 });
