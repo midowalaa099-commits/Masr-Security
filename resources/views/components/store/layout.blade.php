@@ -39,8 +39,8 @@
     @endif
 
     <!-- Main header -->
-    <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-        <div class="mx-auto flex max-w-[90rem] items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+    <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-[0_10px_35px_-22px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <div class="mx-auto flex max-w-[94rem] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
             <div class="flex shrink-0 items-center gap-3">
                 <button @click="mobileOpen = !mobileOpen" type="button" class="-m-2 inline-flex items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 xl:hidden" aria-label="{{ __('store.navigation') }}" :aria-expanded="mobileOpen" aria-controls="store-mobile-navigation">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
@@ -48,31 +48,31 @@
                 @include('components.store.brand', ['logoClass' => 'h-16 w-16 shrink-0 rounded-full object-cover shadow-md ring-2 ring-brand-100 sm:h-20 sm:w-20'])
             </div>
 
-            <nav class="hidden items-center gap-1 whitespace-nowrap xl:flex">
-                <a href="{{ route('home') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('home') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+            <nav class="hidden items-center gap-1.5 whitespace-nowrap rounded-2xl border border-slate-100 bg-slate-50/80 p-1.5 shadow-inner shadow-slate-200/50 xl:flex">
+                <a href="{{ route('home') }}" class="rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('home') ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                     {{ __('store.home') }}
                 </a>
-                <a href="{{ route('shop') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('shop') || request()->routeIs('categories.show') || request()->routeIs('products.show') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                <a href="{{ route('shop') }}" class="rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('shop') || request()->routeIs('categories.show') || request()->routeIs('products.show') ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                     {{ __('store.shop') }}
                 </a>
 
                 @if ($storefrontNavigationCategories->isNotEmpty())
                     <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('shop') && request()->has('category') || $storefrontNavigationCategories->contains(fn ($c) => request()->routeIs('categories.show') && optional(request()->route('category'))->id === $c->id) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <button type="button" class="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('shop') && request()->has('category') || $storefrontNavigationCategories->contains(fn ($c) => request()->routeIs('categories.show') && optional(request()->route('category'))->id === $c->id) ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                             {{ __('store.categories') }}
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                         </button>
-                        <div x-show="open" x-cloak x-transition class="absolute start-0 top-full z-50 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white pt-2 shadow-lg" @click.outside="open = false">
-                            <a href="{{ route('shop') }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-700">{{ __('store.all') }}</a>
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-2 opacity-0" class="absolute start-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-slate-900/15 backdrop-blur-xl" @click.outside="open = false">
+                            <a href="{{ route('shop') }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">{{ __('store.all') }}</a>
                             @foreach ($storefrontNavigationCategories as $category)
                                 <div class="border-t border-slate-100">
-                                    <a href="{{ route('shop', ['category' => $category->id]) }}" class="block px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 hover:text-brand-700">
+                                    <a href="{{ route('shop', ['category' => $category->id]) }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-800 transition hover:bg-brand-50 hover:text-brand-700">
                                         {{ $category->trans('name') }}
                                     </a>
                                     @if ($category->children->isNotEmpty())
                                         <div class="ps-8 pb-1">
                                             @foreach ($category->children as $child)
-                                                <a href="{{ route('shop', ['category' => $child->id]) }}" class="block py-1 text-sm text-slate-500 hover:text-brand-700">
+                                                <a href="{{ route('shop', ['category' => $child->id]) }}" class="block rounded-lg px-2 py-1.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-brand-700">
                                                     {{ $child->trans('name') }}
                                                 </a>
                                             @endforeach
@@ -84,16 +84,16 @@
                     </div>
                 @endif
 
-                <a href="{{ route('packages.index') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('packages.*') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                <a href="{{ route('packages.index') }}" class="rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('packages.*') ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                     {{ __('store.packages') }}
                 </a>
-                <a href="{{ route('about') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('about') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                <a href="{{ route('about') }}" class="rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('about') ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                     {{ __('store.about') }}
                 </a>
-                <a href="{{ route('contact') }}" class="rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('contact') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                <a href="{{ route('contact') }}" class="rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('contact') ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                     {{ __('store.contact') }}
                 </a>
-                <a href="{{ route('quote.create') }}" class="ms-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+                <a href="{{ route('quote.create') }}" class="ms-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 px-5 py-2.5 text-base font-bold text-white shadow-lg shadow-brand-700/20 transition duration-200 hover:-translate-y-0.5 hover:from-brand-800 hover:to-brand-700 hover:shadow-xl">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                     {{ __('store.quote') }}
                 </a>

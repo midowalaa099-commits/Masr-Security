@@ -11,31 +11,32 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-full bg-slate-50 font-sans text-slate-800 antialiased">
-        <main class="relative min-h-screen overflow-hidden bg-gradient-to-b from-navy-950 via-navy-950 to-slate-50 px-4 py-8 sm:px-6 sm:py-10">
+    <body class="min-h-full bg-navy-950 font-sans text-slate-800 antialiased">
+        <main class="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-navy-950 via-brand-950 to-navy-900 px-4 py-5 sm:px-6 lg:h-screen lg:overflow-hidden lg:px-8">
             <div class="absolute -start-24 top-8 h-72 w-72 rounded-full bg-brand-500/25 blur-3xl" aria-hidden="true"></div>
-            <div class="absolute -end-32 top-40 h-80 w-80 rounded-full bg-blue-400/15 blur-3xl" aria-hidden="true"></div>
+            <div class="absolute -end-32 bottom-0 h-96 w-96 rounded-full bg-blue-400/15 blur-3xl" aria-hidden="true"></div>
 
-            <div class="relative mx-auto flex w-full max-w-5xl flex-col items-center">
-                <div class="w-full overflow-hidden rounded-3xl border border-white/15 bg-brand-950 shadow-2xl shadow-navy-950/30">
+            <div class="relative mx-auto grid min-h-[calc(100vh-2.5rem)] w-full max-w-7xl items-center gap-6 lg:min-h-0 lg:h-full lg:grid-cols-[minmax(0,1.2fr)_minmax(24rem,0.8fr)] lg:gap-10">
+                <div class="group relative w-full overflow-hidden rounded-3xl border border-white/15 bg-brand-950 shadow-2xl shadow-black/30">
+                    <div class="pointer-events-none absolute inset-0 z-10 rounded-3xl ring-1 ring-inset ring-white/10" aria-hidden="true"></div>
                     <img
                         src="{{ asset('images/branding/masr-security-hero.jpg') }}"
                         alt="{{ __('auth_pages.security_hero_alt') }}"
-                        class="h-auto w-full object-contain"
+                        class="h-auto w-full object-contain transition duration-700 ease-out group-hover:scale-[1.015]"
                     >
                 </div>
 
-                <div class="relative -mt-10 w-full max-w-md sm:-mt-14">
-                    <div class="mb-4 flex justify-center">
-                        <div class="rounded-full border-4 border-white bg-navy-950 p-1.5 shadow-xl shadow-navy-950/35">
+                <div class="relative mx-auto w-full max-w-md">
+                    <div class="mb-3 flex justify-center">
+                        <div class="rounded-full border-4 border-white/90 bg-navy-950 p-1 shadow-xl shadow-black/35 ring-4 ring-brand-500/15">
                             @include('components.store.brand', [
                                 'dark' => true,
-                                'logoClass' => 'h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28',
+                                'logoClass' => 'h-20 w-20 rounded-full object-cover sm:h-24 sm:w-24',
                             ])
                         </div>
                     </div>
 
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-navy-950/15 sm:p-8">
+                    <div class="overflow-hidden rounded-3xl border border-white/70 bg-white/98 p-5 shadow-2xl shadow-black/25 backdrop-blur sm:p-6">
                         {{ $slot }}
                     </div>
                 </div>
