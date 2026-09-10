@@ -40,4 +40,19 @@
             </x-primary-button>
         </div>
     </form>
+
+    @if (Route::has('register'))
+        <div class="mt-8 border-t border-slate-200 pt-6 text-center">
+            <p class="text-sm text-slate-600">{{ __('auth_pages.no_account') }}</p>
+            <a
+                href="{{ route('register') }}"
+                class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-5 py-3 text-sm font-bold text-brand-700 transition hover:border-brand-300 hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+            >
+                {{ __('auth_pages.create_account_now') }}
+                <svg class="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M4.167 10h11.666M11.667 5.833 15.833 10l-4.166 4.167" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+        </div>
+    @endif
 </x-guest-layout>

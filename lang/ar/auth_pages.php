@@ -10,6 +10,8 @@ return [
     'forgot_password' => 'هل نسيت كلمة المرور؟',
     'login' => 'تسجيل الدخول',
     'register' => 'إنشاء حساب',
+    'no_account' => 'ليس لديك حساب بعد؟',
+    'create_account_now' => 'أنشئ حسابك الآن',
     'name' => 'الاسم',
     'already_registered' => 'لديك حساب بالفعل؟',
     'reset_password' => 'إعادة تعيين كلمة المرور',

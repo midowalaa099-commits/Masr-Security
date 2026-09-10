@@ -10,6 +10,8 @@ return [
     'forgot_password' => 'Forgot your password?',
     'login' => 'Log in',
     'register' => 'Create account',
+    'no_account' => "Don't have an account yet?",
+    'create_account_now' => 'Create your account',
     'name' => 'Name',
     'already_registered' => 'Already registered?',
     'reset_password' => 'Reset password',
