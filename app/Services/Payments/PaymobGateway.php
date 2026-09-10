@@ -23,9 +23,9 @@ use Illuminate\Support\Facades\Log;
  *   - Callback security:      HMAC-SHA512 over the documented 20 transaction
  *       fields concatenated in order (see https://developers.paymob.com/paymob-docs/developers/webhook-callbacks-and-hmac/hmac/hmac-transaction-callback)
  *
- * When the secret key is not configured the gateway runs in sandbox mode and
- * returns a local redirect URL so the surrounding flow stays testable. It
- * never fabricates a successful payment by itself.
+ * The local simulator is available only when explicitly enabled outside
+ * production. Missing live credentials never expose simulated payments to
+ * customers.
  */
 class PaymobGateway implements PaymentGatewayInterface
 {
@@ -43,13 +43,21 @@ class PaymobGateway implements PaymentGatewayInterface
 
     public function isSandboxMode(): bool
     {
-        return ! $this->isConfigured();
+        return (bool) config('paymob.sandbox_mode') && ! app()->environment('production');
     }
 
     public function supportsMethod(PaymentMethod $method): bool
     {
+        if (! $method->requiresGateway()) {
+            return false;
+        }
+
         if ($this->isSandboxMode()) {
             return true;
+        }
+
+        if (! $this->isConfigured()) {
+            return false;
         }
 
         return $this->integrationId($method) > 0;
@@ -62,6 +70,10 @@ class PaymobGateway implements PaymentGatewayInterface
                 'redirect_url' => route('payments.sandbox', ['payment' => $payment->id]),
                 'sandbox_mode' => true,
             ];
+        }
+
+        if (! $this->isConfigured() || ! $this->supportsMethod($method)) {
+            throw new PaymentGatewayException(__('payments.gateway_unavailable'));
         }
 
         $order = $payment->order;
@@ -343,9 +355,11 @@ class PaymobGateway implements PaymentGatewayInterface
 
     private function integrationId(PaymentMethod $method): int
     {
-        return $method === PaymentMethod::Wallet
-            ? (int) config('paymob.wallet_integration_id')
-            : (int) config('paymob.card_integration_id');
+        return match ($method) {
+            PaymentMethod::Card => (int) config('paymob.card_integration_id'),
+            PaymentMethod::Wallet => (int) config('paymob.wallet_integration_id'),
+            PaymentMethod::CashOnDelivery => 0,
+        };
     }
 
     /**

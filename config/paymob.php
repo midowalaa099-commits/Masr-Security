@@ -23,10 +23,9 @@ return [
     'currency' => 'EGP',
 
     /*
-    | When the secret key is not configured the gateway falls back to a local
-    | sandbox that simulates the Paymob callbacks. This keeps the application
-    | fully runnable before real credentials are provided. Explicitly set
-    | PAYMOB_SANDBOX_MODE=true to force the sandbox even with credentials.
+    | The local simulator must be explicitly enabled and is always disabled in
+    | production. Missing credentials therefore disable online payments instead
+    | of exposing a simulated checkout to real customers.
     */
     'sandbox_mode' => filter_var(env('PAYMOB_SANDBOX_MODE', false), FILTER_VALIDATE_BOOL),
 

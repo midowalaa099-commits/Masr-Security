@@ -40,7 +40,8 @@ class CheckoutController extends Controller
             'subtotal' => $subtotal,
             'shippingFee' => $shippingFee,
             'total' => round($subtotal + $shippingFee, 2),
-            'paymentMethods' => PaymentMethod::cases(),
+            'paymentMethods' => collect(PaymentMethod::cases())
+                ->filter(fn (PaymentMethod $method): bool => ! $method->requiresGateway() || $this->payments->gateway()->supportsMethod($method)),
             'preset' => [
                 'name' => auth()->user()?->name,
                 'email' => auth()->user()?->email,
@@ -51,6 +52,12 @@ class CheckoutController extends Controller
 
     public function store(CheckoutRequest $request)
     {
+        $method = PaymentMethod::from($request->validated('payment_method'));
+
+        if ($method->requiresGateway() && ! $this->payments->gateway()->supportsMethod($method)) {
+            return back()->with('error', __('payments.method_unavailable'))->withInput();
+        }
+
         try {
             $order = $this->checkout->placeOrder($request->safe([
                 'customer_name',
@@ -60,6 +67,7 @@ class CheckoutController extends Controller
                 'city',
                 'address_line',
                 'notes',
+                'payment_method',
             ]));
         } catch (CartEmptyException) {
             return redirect()->route('cart.index')->with('error', __('store.cart_empty'));
@@ -76,12 +84,12 @@ class CheckoutController extends Controller
                 ->all(),
         ]);
 
-        $method = PaymentMethod::from($request->validated('payment_method'));
-        $payment = $this->payments->startPayment($order, $method);
-
-        if (! $this->payments->gateway()->supportsMethod($method)) {
-            return redirect()->route('checkout.return', $payment)->with('error', __('payments.method_unavailable'));
+        if (! $method->requiresGateway()) {
+            return redirect()->route('checkout.success', $order)
+                ->with('success', __('payments.cash_on_delivery_confirmed'));
         }
+
+        $payment = $this->payments->startPayment($order, $method);
 
         try {
             $result = $this->payments->redirect($payment, $method);

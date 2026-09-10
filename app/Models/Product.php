@@ -17,6 +17,16 @@ class Product extends Model implements Purchasable
     /** @use HasFactory<ProductFactory> */
     use Concerns\HasTranslatableAttributes, HasFactory;
 
+    /**
+     * Public-domain real-world product photography used until the owner uploads
+     * the exact supplier image for this SKU.
+     *
+     * @var array<string, string>
+     */
+    private const STOREFRONT_IMAGE_FALLBACKS = [
+        'HIK-DOM-4MP' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/HIK-VISION_security_camera.JPG/960px-HIK-VISION_security_camera.JPG',
+    ];
+
     protected $fillable = [
         'category_id',
         'sku',
@@ -149,7 +159,7 @@ class Product extends Model implements Purchasable
     {
         $image = $this->images()->first();
 
-        return $image?->url;
+        return $image?->url ?? self::STOREFRONT_IMAGE_FALLBACKS[$this->sku] ?? null;
     }
 
     public function getRouteKeyName(): string

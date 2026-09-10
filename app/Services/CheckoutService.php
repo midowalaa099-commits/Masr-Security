@@ -27,7 +27,7 @@ class CheckoutService
     ) {}
 
     /**
-     * @param  array{customer_name: string, phone: string, email: ?string, governorate: ?string, city: ?string, address_line: ?string, notes: ?string}  $customerData
+     * @param  array{customer_name: string, phone: string, email: ?string, governorate: ?string, city: ?string, address_line: ?string, notes: ?string, payment_method: string}  $customerData
      *
      * @throws CartEmptyException
      * @throws InsufficientStockException

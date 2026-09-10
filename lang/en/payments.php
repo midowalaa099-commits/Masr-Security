@@ -2,10 +2,13 @@
 
 return [
     'method_cash_on_delivery' => 'Cash on Delivery',
+    'cash_on_delivery_hint' => 'Pay in cash when your order arrives',
+    'cash_on_delivery_confirmed' => 'Your order is confirmed. You can pay in cash when it arrives.',
     'method_card' => 'Credit / Debit Card',
     'method_wallet' => 'Mobile Wallet',
     'method_unavailable' => 'This payment method is not available right now. Please contact us.',
     'gateway_unavailable' => 'The payment gateway is currently unavailable. Please try again later.',
+    'online_payment_setup_required' => 'Online card and wallet payments will appear here after secure payment activation.',
     'processing' => 'Processing',
     'redirecting' => 'Redirecting to the payment gateway…',
     'processing_note' => 'Do not close or refresh this page.',

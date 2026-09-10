@@ -2,10 +2,13 @@
 
 return [
     'method_cash_on_delivery' => 'الدفع عند الاستلام',
+    'cash_on_delivery_hint' => 'ادفع نقداً عند استلام طلبك',
+    'cash_on_delivery_confirmed' => 'تم تأكيد طلبك. يمكنك الدفع نقداً عند الاستلام.',
     'method_card' => 'بطاقة ائتمان / خصم',
     'method_wallet' => 'محفظة إلكترونية',
     'method_unavailable' => 'طريقة الدفع هذه غير متاحة حالياً. يرجى التواصل معنا.',
     'gateway_unavailable' => 'بوابة الدفع غير متاحة حالياً. يرجى المحاولة لاحقاً.',
+    'online_payment_setup_required' => 'ستظهر طرق الدفع بالبطاقة والمحفظة هنا بعد تفعيل بوابة الدفع الآمنة.',
     'processing' => 'جاري المعالجة',
     'redirecting' => 'جاري تحويلك إلى بوابة الدفع…',
     'processing_note' => 'لا تغلق الصفحة أو تقم بتحديثها.',

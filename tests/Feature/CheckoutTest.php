@@ -70,6 +70,55 @@ class CheckoutTest extends TestCase
         $this->assertSame(PaymentStatus::Pending, $payment->status);
     }
 
+    public function test_guest_can_place_a_cash_on_delivery_order_without_a_payment_gateway(): void
+    {
+        config([
+            'paymob.secret_key' => null,
+            'paymob.public_key' => null,
+            'paymob.sandbox_mode' => false,
+        ]);
+
+        $this->cartWithProduct(1000, 10, 1);
+
+        $this->post(route('checkout.store'), [
+            'customer_name' => 'Cash Customer',
+            'phone' => '01000000000',
+            'email' => 'cash@example.com',
+            'address_line' => '1 Main St',
+            'payment_method' => 'cash_on_delivery',
+        ])->assertRedirect();
+
+        $order = Order::firstOrFail();
+
+        $this->assertSame('cash_on_delivery', $order->payment_method);
+        $this->assertSame(OrderStatus::Pending, $order->status);
+        $this->assertSame(0, $order->payments()->count());
+        $this->get(route('checkout.success', $order))
+            ->assertOk()
+            ->assertSee(__('payments.cash_on_delivery_confirmed'));
+    }
+
+    public function test_unconfigured_online_payment_is_rejected_before_creating_an_order(): void
+    {
+        config([
+            'paymob.secret_key' => null,
+            'paymob.public_key' => null,
+            'paymob.sandbox_mode' => false,
+        ]);
+
+        $this->cartWithProduct(1000, 10, 1);
+
+        $this->from(route('checkout.index'))->post(route('checkout.store'), [
+            'customer_name' => 'Card Customer',
+            'phone' => '01000000000',
+            'payment_method' => 'card',
+        ])->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, Order::count());
+        $this->assertSame(1, session('cart.items.0.quantity'));
+    }
+
     public function test_simulating_a_successful_payment_marks_the_order_paid(): void
     {
         $this->cartWithProduct(1000, 10, 2);

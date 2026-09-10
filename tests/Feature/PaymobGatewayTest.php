@@ -94,13 +94,30 @@ class PaymobGatewayTest extends TestCase
 
     public function test_sandbox_mode_supports_every_payment_method(): void
     {
-        config(['paymob.secret_key' => null]);
+        config(['paymob.secret_key' => null, 'paymob.sandbox_mode' => true]);
 
         $gateway = $this->gateway();
 
         $this->assertTrue($gateway->isSandboxMode());
         $this->assertTrue($gateway->supportsMethod(PaymentMethod::Card));
         $this->assertTrue($gateway->supportsMethod(PaymentMethod::Wallet));
+    }
+
+    public function test_sandbox_mode_is_never_available_in_production(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+
+        config([
+            'paymob.secret_key' => null,
+            'paymob.public_key' => null,
+            'paymob.sandbox_mode' => true,
+        ]);
+
+        $gateway = $this->gateway();
+
+        $this->assertFalse($gateway->isSandboxMode());
+        $this->assertFalse($gateway->supportsMethod(PaymentMethod::Card));
+        $this->assertFalse($gateway->supportsMethod(PaymentMethod::Wallet));
     }
 
     public function test_configured_gateway_requires_integration_ids_otherwise(): void

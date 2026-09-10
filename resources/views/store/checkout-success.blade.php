@@ -4,12 +4,14 @@
 
         @php
             $succeeded = $payment && $payment->isSuccessful();
+            $cashOnDelivery = $order->payment_method === \App\Enums\PaymentMethod::CashOnDelivery->value;
+            $confirmed = $succeeded || $cashOnDelivery;
             $pending = $payment && ! $payment->status->isFinal();
         @endphp
 
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="px-6 py-10 text-center sm:px-12">
-                @if ($succeeded)
+                @if ($confirmed)
                     <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                         <svg class="h-9 w-9 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </span>
@@ -24,15 +26,19 @@
                 @endif
 
                 <h1 class="mt-5 text-2xl font-bold text-slate-900">
-                    {{ $succeeded ? __('store.order_success_title') : ($pending ? __('payments.payment_pending') : __('store.order_failed_text')) }}
+                    {{ $confirmed ? __('store.order_success_title') : ($pending ? __('payments.payment_pending') : __('store.order_failed_text')) }}
                 </h1>
+
+                @if ($cashOnDelivery)
+                    <p class="mx-auto mt-3 max-w-md text-sm text-slate-500">{{ __('payments.cash_on_delivery_confirmed') }}</p>
+                @endif
 
                 <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">
                     {{ __('store.order_number') }}
                     <span class="font-mono font-bold text-slate-900" dir="ltr">{{ $order->order_number }}</span>
                 </div>
 
-                @if (! $succeeded && ! $pending)
+                @if (! $confirmed && ! $pending)
                     <p class="mx-auto mt-4 max-w-md text-sm text-slate-500">{{ __('store.order_failed_text') }}</p>
                 @endif
             </div>

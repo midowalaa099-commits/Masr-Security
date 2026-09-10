@@ -4,7 +4,7 @@
         <h1 class="text-2xl font-bold text-slate-900">{{ __('store.checkout') }}</h1>
         <p class="mt-1 text-sm text-slate-500">{{ __('store.guest_note') }}</p>
 
-        <form method="POST" action="{{ route('checkout.store') }}" x-data="{ method: '{{ old('payment_method', 'card') }}' }" class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
+        <form method="POST" action="{{ route('checkout.store') }}" x-data="{ method: '{{ old('payment_method', 'cash_on_delivery') }}' }" class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
             @csrf
 
             <div class="space-y-6">
@@ -82,6 +82,7 @@
                     <div class="mt-5 space-y-3">
                         @php
                             $options = [
+                                'cash_on_delivery' => ['label' => __('payments.method_cash_on_delivery'), 'icon' => 'cash', 'hint' => __('payments.cash_on_delivery_hint')],
                                 'card' => ['label' => __('payments.method_card'), 'icon' => 'card', 'hint' => 'Visa · Mastercard'],
                                 'wallet' => ['label' => __('payments.method_wallet'), 'icon' => 'wallet', 'hint' => 'Vodafone Cash'],
                             ];
@@ -91,12 +92,14 @@
                             @php $option = $options[$paymentMethod->value] ?? null; @endphp
                             @continue(! $option)
 
-                            <label class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition {{ $paymentMethod->value === old('payment_method', 'card') ? 'border-brand-600 bg-brand-50/50' : 'border-slate-200 hover:border-slate-300' }}"
+                            <label class="flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition {{ $paymentMethod->value === old('payment_method', 'cash_on_delivery') ? 'border-brand-600 bg-brand-50/50' : 'border-slate-200 hover:border-slate-300' }}"
                                 :class="method === '{{ $paymentMethod->value }}' ? 'border-brand-600 bg-brand-50/50' : 'border-slate-200'">
                                 <input type="radio" name="payment_method" value="{{ $paymentMethod->value }}" x-model="method"
                                     class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500">
                                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-brand-700">
-                                    @if ($option['icon'] === 'wallet')
+                                    @if ($option['icon'] === 'cash')
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75A2.25 2.25 0 014.5 4.5h15a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 8.25h.008v.008H6V8.25zm12 7.5h.008v.008H18v-.008zM15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    @elseif ($option['icon'] === 'wallet')
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" /></svg>
                                     @else
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -108,6 +111,12 @@
                                 </span>
                             </label>
                         @endforeach
+
+                        @if ($paymentMethods->count() === 1)
+                            <p class="rounded-xl bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900 ring-1 ring-inset ring-amber-200">
+                                {{ __('payments.online_payment_setup_required') }}
+                            </p>
+                        @endif
                         <x-input-error :messages="$errors->get('payment_method')" class="mt-2" />
                     </div>
                 </section>
