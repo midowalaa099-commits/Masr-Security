@@ -21,6 +21,7 @@ return [
     'quote' => 'Request a Quote',
     'account' => 'My Account',
     'orders' => 'My Orders',
+    'change_password' => 'Change Password',
     'recent_orders' => 'Recent Orders',
     'login' => 'Login',
     'register' => 'Register',

@@ -21,6 +21,7 @@ return [
     'quote' => 'اطلب عرض سعر',
     'account' => 'حسابي',
     'orders' => 'طلباتي',
+    'change_password' => 'تغيير كلمة المرور',
     'recent_orders' => 'أحدث الطلبات',
     'login' => 'تسجيل الدخول',
     'register' => 'إنشاء حساب',
