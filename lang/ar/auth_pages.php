@@ -42,6 +42,8 @@ return [
     'resend_verification_link' => 'اضغط هنا لإعادة إرسال رسالة التأكيد.',
     'update_password' => 'تحديث كلمة المرور',
     'update_password_intro' => 'استخدم كلمة مرور طويلة وفريدة للحفاظ على أمان حسابك.',
+    'account_security' => 'أمان الحساب',
+    'account_security_intro' => 'غيّر كلمة المرور وحافظ على حماية الوصول إلى حسابك.',
     'save' => 'حفظ',
     'saved' => 'تم الحفظ.',
     'delete_account' => 'حذف الحساب',

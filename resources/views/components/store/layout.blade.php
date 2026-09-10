@@ -57,29 +57,31 @@
                 </a>
 
                 @if ($storefrontNavigationCategories->isNotEmpty())
-                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('shop') && request()->has('category') || $storefrontNavigationCategories->contains(fn ($c) => request()->routeIs('categories.show') && optional(request()->route('category'))->id === $c->id) ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
+                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @keydown.escape.window="open = false">
+                        <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true" class="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-base font-semibold transition duration-200 ease-out {{ request()->routeIs('shop') && request()->has('category') || $storefrontNavigationCategories->contains(fn ($c) => request()->routeIs('categories.show') && optional(request()->route('category'))->id === $c->id) ? 'bg-white text-brand-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-brand-700 hover:shadow-sm' }}">
                             {{ __('store.categories') }}
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                         </button>
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-2 opacity-0" class="absolute start-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-slate-900/15 backdrop-blur-xl" @click.outside="open = false">
-                            <a href="{{ route('shop') }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">{{ __('store.all') }}</a>
-                            @foreach ($storefrontNavigationCategories as $category)
-                                <div class="border-t border-slate-100">
-                                    <a href="{{ route('shop', ['category' => $category->id]) }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-800 transition hover:bg-brand-50 hover:text-brand-700">
-                                        {{ $category->trans('name') }}
-                                    </a>
-                                    @if ($category->children->isNotEmpty())
-                                        <div class="ps-8 pb-1">
-                                            @foreach ($category->children as $child)
-                                                <a href="{{ route('shop', ['category' => $child->id]) }}" class="block rounded-lg px-2 py-1.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-brand-700">
-                                                    {{ $child->trans('name') }}
-                                                </a>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-2 opacity-0" class="absolute start-0 top-full z-50 w-80 pt-2" @click.outside="open = false">
+                            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-slate-900/15 backdrop-blur-xl">
+                                <a href="{{ route('shop') }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">{{ __('store.all') }}</a>
+                                @foreach ($storefrontNavigationCategories as $category)
+                                    <div class="border-t border-slate-100">
+                                        <a href="{{ route('shop', ['category' => $category->id]) }}" class="block rounded-xl px-4 py-3 text-base font-semibold text-slate-800 transition hover:bg-brand-50 hover:text-brand-700">
+                                            {{ $category->trans('name') }}
+                                        </a>
+                                        @if ($category->children->isNotEmpty())
+                                            <div class="ps-8 pb-1">
+                                                @foreach ($category->children as $child)
+                                                    <a href="{{ route('shop', ['category' => $child->id]) }}" class="block rounded-lg px-2 py-1.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-brand-700">
+                                                        {{ $child->trans('name') }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endif

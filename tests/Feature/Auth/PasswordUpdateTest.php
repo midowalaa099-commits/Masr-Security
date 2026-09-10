@@ -55,7 +55,7 @@ class PasswordUpdateTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('account.dashboard'))
-            ->assertSee(__('admin.account_security'))
+            ->assertSee(__('auth_pages.account_security'))
             ->assertSee(__('store.change_password'))
             ->assertSee('href="'.route('account.dashboard').'#account-security"', false)
             ->assertSee(route('password.update'))

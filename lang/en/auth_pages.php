@@ -42,6 +42,8 @@ return [
     'resend_verification_link' => 'Click here to resend the verification email.',
     'update_password' => 'Update password',
     'update_password_intro' => 'Use a long, unique password to keep your account secure.',
+    'account_security' => 'Account security',
+    'account_security_intro' => 'Change your password and keep access to your account protected.',
     'save' => 'Save',
     'saved' => 'Saved.',
     'delete_account' => 'Delete account',
