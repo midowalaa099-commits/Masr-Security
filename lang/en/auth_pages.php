@@ -12,6 +12,7 @@ return [
     'register' => 'Create account',
     'no_account' => "Don't have an account yet?",
     'create_account_now' => 'Create your account',
+    'security_hero_alt' => 'MASR Security professional security and communication systems',
     'name' => 'Name',
     'already_registered' => 'Already registered?',
     'reset_password' => 'Reset password',
