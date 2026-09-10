@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" class="h-full scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" class="h-full scroll-smooth bg-navy-950">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +9,7 @@
     <meta name="description" content="{{ setting('hero_subtitle_'.app()->getLocale()) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ mobileOpen: false, searchOpen: false }">
+<body class="min-h-full overflow-x-hidden bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ mobileOpen: false, searchOpen: false }">
 
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-white">
         {{ __('store.skip_to_content') }}

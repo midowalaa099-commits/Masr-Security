@@ -10,6 +10,8 @@ return [
     'payments' => 'Payments',
     'quotes' => 'Quote Requests',
     'settings' => 'Settings',
+    'account_security' => 'Admin account security',
+    'account_security_intro' => 'Change the password used to access this administration panel.',
     'audit_logs' => 'Audit Logs',
     'logout' => 'Logout',
     'view_store' => 'View Store',

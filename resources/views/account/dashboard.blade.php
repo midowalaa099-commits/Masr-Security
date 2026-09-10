@@ -23,6 +23,21 @@
                     </div>
                 </div>
 
+                <div id="account-security" class="mt-6 overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+                    <div class="flex items-center gap-4 border-b border-brand-100 bg-gradient-to-r from-brand-50 to-white px-6 py-5">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 10.125h10.5A2.625 2.625 0 0019.875 18V12.75a2.625 2.625 0 00-2.625-2.625H6.75a2.625 2.625 0 00-2.625 2.625V18a2.625 2.625 0 002.625 2.625z" /></svg>
+                        </span>
+                        <div>
+                            <h2 class="font-bold text-navy-950">{{ __('admin.account_security') }}</h2>
+                            <p class="mt-0.5 text-sm text-slate-600">{{ __('admin.account_security_intro') }}</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        @include('profile.partials.update-password-form')
+                    </div>
+                </div>
+
                 @if ($orders->isNotEmpty())
                     <h2 class="mt-8 text-lg font-bold text-slate-900">{{ __('store.recent_orders') }}</h2>
                     <div class="mt-4">

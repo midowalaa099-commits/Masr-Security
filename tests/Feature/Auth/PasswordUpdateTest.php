@@ -48,4 +48,32 @@ class PasswordUpdateTest extends TestCase
             ->assertSessionHasErrorsIn('updatePassword', 'current_password')
             ->assertRedirect('/profile');
     }
+
+    public function test_website_account_dashboard_shows_the_password_change_form(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('account.dashboard'))
+            ->assertSee(__('admin.account_security'))
+            ->assertSee(route('password.update'))
+            ->assertSee('name="current_password"', false);
+    }
+
+    public function test_admin_can_change_their_password_from_the_website_account_dashboard(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->from(route('account.dashboard'))
+            ->put(route('password.update'), [
+                'current_password' => 'password',
+                'password' => 'Stronger-password-2026',
+                'password_confirmation' => 'Stronger-password-2026',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('account.dashboard'));
+
+        $this->assertTrue(Hash::check('Stronger-password-2026', $admin->refresh()->password));
+    }
 }

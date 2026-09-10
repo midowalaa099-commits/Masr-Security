@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +45,11 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === UserRole::Customer;
+    }
+
+    public function sendPasswordResetNotification(mixed $token): void
+    {
+        $this->notify(new ResetPasswordNotification((string) $token));
     }
 
     public function orders(): HasMany

@@ -10,6 +10,8 @@ return [
     'payments' => 'المدفوعات',
     'quotes' => 'طلبات الأسعار',
     'settings' => 'الإعدادات',
+    'account_security' => 'أمان حساب المدير',
+    'account_security_intro' => 'غيّر كلمة المرور المستخدمة للدخول إلى لوحة الإدارة.',
     'audit_logs' => 'سجل النشاط',
     'logout' => 'تسجيل الخروج',
     'view_store' => 'عرض المتجر',

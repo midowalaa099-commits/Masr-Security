@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -27,7 +27,7 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, ResetPasswordNotification::class);
     }
 
     public function test_reset_password_screen_can_be_rendered(): void
@@ -38,7 +38,7 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
+        Notification::assertSentTo($user, ResetPasswordNotification::class, function ($notification) {
             $response = $this->get('/reset-password/'.$notification->token);
 
             $response->assertStatus(200);
@@ -55,7 +55,7 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        Notification::assertSentTo($user, ResetPasswordNotification::class, function ($notification) use ($user) {
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
@@ -69,5 +69,51 @@ class PasswordResetTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_reset_password_email_contains_the_secure_branded_action(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['name' => 'Mona']);
+
+        $this->post(route('password.email'), ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPasswordNotification::class, function (ResetPasswordNotification $notification) use ($user): bool {
+            $message = $notification->toMail($user);
+
+            $this->assertSame(__('auth_pages.reset_email_subject'), $message->subject);
+            $this->assertSame(__('auth_pages.reset_email_action'), $message->actionText);
+            $this->assertStringContainsString(route('password.reset', $notification->token), $message->actionUrl);
+            $this->assertStringContainsString(urlencode($user->email), $message->actionUrl);
+
+            return true;
+        });
+    }
+
+    public function test_admin_can_request_a_password_reset_email(): void
+    {
+        Notification::fake();
+
+        $admin = User::factory()->admin()->create();
+
+        $this->post(route('password.email'), ['email' => $admin->email])
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentTo($admin, ResetPasswordNotification::class);
+    }
+
+    public function test_password_reset_requests_are_rate_limited(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->post(route('password.email'), ['email' => $user->email]);
+        }
+
+        $this->post(route('password.email'), ['email' => $user->email])
+            ->assertTooManyRequests();
     }
 }
