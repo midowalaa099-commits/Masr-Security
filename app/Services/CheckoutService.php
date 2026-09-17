@@ -23,7 +23,6 @@ class CheckoutService
     public function __construct(
         private readonly CartService $cart,
         private readonly InventoryService $inventory,
-        private readonly SettingsService $settings,
     ) {}
 
     /**
@@ -45,7 +44,7 @@ class CheckoutService
             $this->ensureStockUnderLock($cartItems);
 
             $subtotal = round($cartItems->sum(fn (CartItemValue $item) => (float) $item->lineTotal()), 2);
-            $shippingFee = $subtotal > 0 ? (float) $this->settings->get('shipping_fee', 0) : 0.0;
+            $shippingFee = 0.0;
 
             $order = new Order($customerData + [
                 'user_id' => auth()->id(),
@@ -101,8 +100,7 @@ class CheckoutService
     }
 
     /**
-     * Lock the physical product rows involved in this cart and re-validate
-     * availability against the locked (most current) values.
+     * Lock the physical product rows and verify they remain active.
      *
      * @param  Collection<int, CartItemValue>  $cartItems
      *
@@ -126,15 +124,15 @@ class CheckoutService
             ->keyBy('id');
 
         foreach ($cartItems as $item) {
-            $available = $item->type === 'package'
+            $isAvailable = $item->type === 'package'
                 ? $this->lockedPackageAvailability($item->model, $lockedProducts)
-                : (int) ($lockedProducts->get($item->id)?->stock_quantity ?? 0);
+                : ($lockedProducts->get($item->id)?->isActive() ?? false);
 
-            if ($item->quantity > $available) {
+            if (! $isAvailable) {
                 throw new InsufficientStockException(
                     __('store.insufficient_stock_exception', [
                         'name' => $item->name,
-                        'available' => $available,
+                        'available' => 0,
                     ]),
                 );
             }
@@ -144,27 +142,21 @@ class CheckoutService
     /**
      * @param  Collection<int, Product>  $lockedProducts
      */
-    private function lockedPackageAvailability(Package $package, Collection $lockedProducts): int
+    private function lockedPackageAvailability(Package $package, Collection $lockedProducts): bool
     {
         if ($package->items->isEmpty()) {
-            return 0;
+            return false;
         }
-
-        $min = null;
 
         foreach ($package->items as $packageItem) {
             $product = $lockedProducts->get($packageItem->product_id);
 
-            if ($product === null) {
-                return 0;
+            if ($product === null || ! $product->isActive()) {
+                return false;
             }
-
-            $possible = intdiv((int) $product->stock_quantity, max(1, (int) $packageItem->quantity));
-
-            $min = $min === null ? $possible : min($min, $possible);
         }
 
-        return $min ?? 0;
+        return true;
     }
 
     private function generateOrderNumber(): string
@@ -178,10 +170,6 @@ class CheckoutService
 
     public function calculateShipping(float $subtotal): float
     {
-        if ($subtotal <= 0) {
-            return 0.0;
-        }
-
-        return (float) $this->settings->get('shipping_fee', 0);
+        return 0.0;
     }
 }

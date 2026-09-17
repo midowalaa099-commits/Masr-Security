@@ -84,6 +84,7 @@
                 <div>
                     <x-input-label for="price" :value="__('admin.price')" />
                     <x-text-input id="price" type="number" step="0.01" min="0.01" name="price" class="mt-1 block w-full" :value="old('price')" required />
+                    <p class="mt-1 text-xs text-slate-500">{{ __('admin.price_includes_shipping') }}</p>
                     <x-input-error :messages="$errors->get('price')" class="mt-2" />
                 </div>
                 <div>
@@ -96,7 +97,8 @@
 
                 <div>
                     <x-input-label for="stock_quantity" :value="__('admin.stock')" />
-                    <x-text-input id="stock_quantity" type="number" min="0" name="stock_quantity" class="mt-1 block w-full" :value="old('stock_quantity', 0)" required />
+                    <x-text-input id="stock_quantity" type="number" min="0" name="stock_quantity" class="mt-1 block w-full" :value="old('stock_quantity')" placeholder="{{ __('admin.none') }}" />
+                    <p class="mt-1 text-xs text-slate-500">{{ __('admin.optional_internal_stock') }}</p>
                     <x-input-error :messages="$errors->get('stock_quantity')" class="mt-2" />
                 </div>
                 <div>

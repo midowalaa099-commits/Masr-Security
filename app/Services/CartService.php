@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Guests keep their cart in the session. Authenticated customers get a
  * persistent cart (carts/cart_items) which is merged into their account on
- * login. Prices, stock and totals are always recomputed from the database.
+ * login. Prices and totals are always recomputed from the database.
  */
 class CartService
 {
@@ -92,7 +92,7 @@ class CartService
                 originalPrice: $purchasable->originalPrice(),
                 quantity: $entry['quantity'],
                 availableQuantity: $available,
-                isAvailable: $purchasable->isAvailable() && $entry['quantity'] <= $available,
+                isAvailable: $purchasable->isAvailable(),
                 stockLabel: $purchasable->stockLabel(),
             );
         })->filter()->values();
@@ -158,9 +158,6 @@ class CartService
         if (! $purchasable) {
             return;
         }
-
-        $available = $this->inventory->availableQuantity($purchasable);
-        $quantity = min($quantity, $available);
 
         if ($this->isPersistent()) {
             $query = $this->cart()->items()
@@ -261,21 +258,23 @@ class CartService
                 continue;
             }
 
-            $available = $this->inventory->availableQuantity($purchasable);
+            if ($this->inventory->availableQuantity($purchasable) === 0) {
+                continue;
+            }
 
             $existing = $cart->items()
                 ->where('cartable_type', $cartableType)
                 ->where('cartable_id', $entry['id'])
                 ->first();
 
-            $newQuantity = min($entry['quantity'], $available);
+            $newQuantity = $entry['quantity'];
 
             if ($newQuantity <= 0) {
                 continue;
             }
 
             if ($existing) {
-                $existing->update(['quantity' => min($existing->quantity + $newQuantity, $available)]);
+                $existing->update(['quantity' => $existing->quantity + $newQuantity]);
             } else {
                 $cart->items()->create([
                     'cartable_type' => $cartableType,

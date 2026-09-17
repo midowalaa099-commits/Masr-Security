@@ -32,7 +32,7 @@
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
                                             @if (! $item->isAvailable)
-                                                <span class="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">{{ $item->stockLabel }}</span>
+                                                <span class="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">{{ __('store.item_unavailable') }}</span>
                                             @endif
                                             <a href="{{ $item->type === 'package' ? route('packages.show', $item->model) : route('products.show', $item->model) }}"
                                                 class="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 hover:text-brand-700">
@@ -59,7 +59,7 @@
                                             <div class="inline-flex items-center rounded-lg border border-slate-300 bg-white">
                                                 <button type="submit" name="quantity" value="{{ max(1, $item->quantity - 1) }}" class="px-2.5 py-1.5 text-slate-500 hover:text-slate-900" aria-label="−">−</button>
                                                 <span class="w-12 text-center text-sm font-semibold text-slate-900">{{ $item->quantity }}</span>
-                                                <button type="submit" name="quantity" value="{{ min($item->availableQuantity, $item->quantity + 1) }}" class="px-2.5 py-1.5 text-slate-500 hover:text-slate-900" aria-label="+" {{ $item->quantity >= $item->availableQuantity ? 'disabled' : '' }}>+</button>
+                                                <button type="submit" name="quantity" value="{{ $item->quantity + 1 }}" class="px-2.5 py-1.5 text-slate-500 hover:text-slate-900" aria-label="+">+</button>
                                             </div>
                                         </form>
 
@@ -97,7 +97,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <dt class="text-slate-500">{{ __('store.shipping') }}</dt>
-                            <dd class="font-semibold text-emerald-600">{{ __('store.calculated_at_checkout') }}</dd>
+                            <dd class="font-semibold text-emerald-600">{{ __('store.free') }}</dd>
                         </div>
                         <div class="flex items-center justify-between border-t border-slate-100 pt-3">
                             <dt class="text-base font-bold text-slate-900">{{ __('store.total') }}</dt>

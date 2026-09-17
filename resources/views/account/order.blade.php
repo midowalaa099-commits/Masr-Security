@@ -57,7 +57,7 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <dt class="text-slate-500">{{ __('store.shipping') }}</dt>
-                                <dd class="font-semibold text-slate-900">{{ money($order->shipping_fee) }}</dd>
+                                <dd class="font-semibold text-slate-900">{{ (float) $order->shipping_fee > 0 ? money($order->shipping_fee) : __('store.free') }}</dd>
                             </div>
                             <div class="flex items-center justify-between border-t border-slate-200 pt-2">
                                 <dt class="text-base font-bold text-slate-900">{{ __('store.total') }}</dt>

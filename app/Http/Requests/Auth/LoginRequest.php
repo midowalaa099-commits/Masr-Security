@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\PhoneNumber;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +29,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -42,7 +43,12 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $identifier = $this->canonicalIdentifier();
+        $credentials = filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            ? ['email' => $identifier, 'password' => $this->input('password')]
+            : ['phone' => PhoneNumber::normalize($identifier) ?? '', 'password' => $this->input('password')];
+
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -81,6 +87,17 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate($this->canonicalIdentifier().'|'.$this->ip());
+    }
+
+    private function canonicalIdentifier(): string
+    {
+        $identifier = trim((string) $this->input('email'));
+
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            return strtolower($identifier);
+        }
+
+        return PhoneNumber::normalize($identifier) ?? Str::lower($identifier);
     }
 }

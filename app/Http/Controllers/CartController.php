@@ -28,7 +28,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'type' => ['required', 'in:product,package'],
             'cartable' => ['required', 'integer'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $purchasable = $validated['type'] === 'package'
@@ -50,7 +50,7 @@ class CartController extends Controller
     public function update(Request $request, string $type, mixed $cartable)
     {
         $request->validate([
-            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $this->cart->updateQuantity($type, (int) $cartable, (int) $request->quantity);

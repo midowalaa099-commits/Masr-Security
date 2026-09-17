@@ -109,17 +109,17 @@ class Product extends Model implements Purchasable
 
     public function isAvailable(): bool
     {
-        return $this->isActive() && $this->stock_quantity > 0;
+        return $this->isActive();
     }
 
     public function isOutOfStock(): bool
     {
-        return $this->stock_quantity <= 0;
+        return $this->stock_quantity !== null && $this->stock_quantity <= 0;
     }
 
     public function isLowStock(): bool
     {
-        return $this->isActive() && ! $this->isOutOfStock() && $this->stock_quantity <= $this->low_stock_threshold;
+        return $this->isActive() && $this->stock_quantity !== null && ! $this->isOutOfStock() && $this->stock_quantity <= $this->low_stock_threshold;
     }
 
     // -------- Purchasable contract --------
@@ -134,12 +134,10 @@ class Product extends Model implements Purchasable
         return $this->trans('name');
     }
 
-    /**
-     * Maximum number of this product that can be fulfilled from current stock.
-     */
-    public function availableQuantity(): int
+    /** Customer ordering is independent of the optional internal stock count. */
+    public function availableQuantity(): ?int
     {
-        return max(0, (int) $this->stock_quantity);
+        return $this->isAvailable() ? null : 0;
     }
 
     public function stockLabel(): string
@@ -157,7 +155,7 @@ class Product extends Model implements Purchasable
 
     public function firstImageUrl(): ?string
     {
-        $image = $this->images()->first();
+        $image = $this->relationLoaded('images') ? $this->images->first() : $this->images()->first();
 
         return $image?->url ?? self::STOREFRONT_IMAGE_FALLBACKS[$this->sku] ?? null;
     }

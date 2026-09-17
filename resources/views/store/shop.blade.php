@@ -75,8 +75,7 @@
                         @if (request('q'))
                             <span class="font-semibold text-slate-800">"{{ request('q') }}"</span> —
                         @endif
-                        {{ __('store.availability') }}:
-                        <span class="font-semibold text-emerald-600">{{ __('store.in_stock') }}</span>
+                        {{ $products->total() }} {{ $products->total() === 1 ? __('store.item') : __('store.items') }}
                     </div>
 
                     <div class="relative inline-flex">

@@ -10,8 +10,8 @@
         @csrf
 
         <div>
-            <x-input-label for="email" :value="__('auth_pages.email')" />
-            <x-text-input id="email" class="mt-1 block w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" dir="ltr" />
+            <x-input-label for="email" :value="__('auth_pages.email_or_phone')" />
+            <x-text-input id="email" class="mt-1 block w-full" type="text" name="email" :value="old('email')" required autofocus autocomplete="username" dir="ltr" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 

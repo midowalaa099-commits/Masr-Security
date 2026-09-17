@@ -12,11 +12,6 @@
                     <x-text-input id="company_name" name="company_name" class="mt-1 block w-full" :value="old('company_name', $settings['company_name'])" />
                     <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
                 </div>
-                <div>
-                    <x-input-label for="shipping_fee" :value="__('admin.shipping_fee')" />
-                    <x-text-input id="shipping_fee" type="number" step="0.01" min="0" name="shipping_fee" class="mt-1 block w-full" :value="old('shipping_fee', $settings['shipping_fee'])" />
-                    <x-input-error :messages="$errors->get('shipping_fee')" class="mt-2" />
-                </div>
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>

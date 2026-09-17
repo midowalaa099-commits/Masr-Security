@@ -15,7 +15,6 @@ class SettingsSeeder extends Seeder
             'whatsapp' => '',
             'email' => '',
             'address' => '',
-            'shipping_fee' => '60',
             'facebook' => 'https://www.facebook.com/profile.php?id=61586652051946&locale=ar_AR',
             'instagram' => '',
             'google_maps' => '',

@@ -58,8 +58,8 @@ class CheckoutTest extends TestCase
 
         $this->assertMatchesRegularExpression('/^MSR-\d{8}-[A-Z0-9]{6}$/', $order->order_number);
         $this->assertSame(2000.0, (float) $order->subtotal);
-        $this->assertSame(60.0, (float) $order->shipping_fee);
-        $this->assertSame(2060.0, (float) $order->total);
+        $this->assertSame(0.0, (float) $order->shipping_fee);
+        $this->assertSame(2000.0, (float) $order->total);
         $this->assertSame(OrderStatus::AwaitingPayment, $order->status);
         $this->assertNull($order->user_id);
 
@@ -96,6 +96,55 @@ class CheckoutTest extends TestCase
         $this->get(route('checkout.success', $order))
             ->assertOk()
             ->assertSee(__('payments.cash_on_delivery_confirmed'));
+    }
+
+    public function test_checkout_preserves_a_quantity_above_999_when_internal_stock_is_zero(): void
+    {
+        config(['paymob.secret_key' => null, 'paymob.public_key' => null]);
+
+        $product = Product::factory()->create(['price' => 1, 'stock_quantity' => 0]);
+
+        $this->post(route('cart.add'), [
+            'type' => 'product',
+            'cartable' => $product->id,
+            'quantity' => 1001,
+        ])->assertRedirect(route('cart.index'));
+
+        $this->post(route('checkout.store'), [
+            'customer_name' => 'Bulk Customer',
+            'phone' => '01000000000',
+            'email' => 'bulk@example.com',
+            'address_line' => '1 Main St',
+            'payment_method' => 'cash_on_delivery',
+        ])->assertRedirect();
+
+        $order = Order::query()->firstOrFail();
+
+        $this->assertSame(1001, $order->items()->firstOrFail()->quantity);
+        $this->assertSame(1001.0, (float) $order->total);
+        $this->assertSame(-1001, (int) $product->fresh()->stock_quantity);
+    }
+
+    public function test_untracked_stock_stays_null_after_an_order(): void
+    {
+        $product = Product::factory()->create(['price' => 500, 'stock_quantity' => null]);
+
+        $this->post(route('cart.add'), [
+            'type' => 'product',
+            'cartable' => $product->id,
+            'quantity' => 2,
+        ])->assertRedirect(route('cart.index'));
+
+        $this->post(route('checkout.store'), [
+            'customer_name' => 'Test User',
+            'phone' => '01000000000',
+            'payment_method' => 'cash_on_delivery',
+        ])->assertRedirect();
+
+        $order = Order::firstOrFail();
+        $this->assertSame(0.0, (float) $order->shipping_fee);
+        $this->assertSame(1000.0, (float) $order->total);
+        $this->assertNull($product->fresh()->stock_quantity);
     }
 
     public function test_unconfigured_online_payment_is_rejected_before_creating_an_order(): void

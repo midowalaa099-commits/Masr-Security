@@ -63,6 +63,22 @@ class StorefrontTest extends TestCase
         $this->get(route('products.show', $product))->assertOk()->assertSee($product->name_en);
     }
 
+    public function test_zero_private_stock_does_not_hide_a_product_or_expose_stock_status(): void
+    {
+        $product = Product::factory()->create(['stock_quantity' => 0]);
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee(__('store.free_shipping'))
+            ->assertSee(__('store.add_to_cart'))
+            ->assertDontSee(__('store.out_of_stock'));
+
+        $this->get(route('shop'))
+            ->assertOk()
+            ->assertSee($product->name_en)
+            ->assertDontSee(__('store.out_of_stock'));
+    }
+
     public function test_package_listing_and_detail_pages_render(): void
     {
         $componentA = Product::factory()->component()->create(['price' => 500, 'stock_quantity' => 10]);

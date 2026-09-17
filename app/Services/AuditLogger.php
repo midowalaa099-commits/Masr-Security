@@ -66,7 +66,7 @@ class AuditLogger
         $this->log('product_price_changed', $product, ['price' => $oldPrice], ['price' => $newPrice]);
     }
 
-    public function stockChanged(Model $product, int $oldStock, int $newStock): void
+    public function stockChanged(Model $product, ?int $oldStock, ?int $newStock): void
     {
         $this->log('stock_changed', $product, ['stock_quantity' => $oldStock], ['stock_quantity' => $newStock]);
     }

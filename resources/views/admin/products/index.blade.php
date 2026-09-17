@@ -61,8 +61,8 @@
                                 <span class="font-bold text-slate-900">{{ money($product->displayPrice()) }}</span>
                             </td>
                             <td class="px-5 py-3 text-center">
-                                <span class="{{ $product->stock_quantity <= 0 ? 'bg-rose-100 text-rose-700' : ($product->stock_quantity <= $product->low_stock_threshold ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700') }} inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold">
-                                    {{ $product->stock_quantity }}
+                                <span class="{{ $product->stock_quantity === null ? 'bg-slate-100 text-slate-600' : ($product->stock_quantity <= 0 ? 'bg-rose-100 text-rose-700' : ($product->stock_quantity <= $product->low_stock_threshold ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')) }} inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold">
+                                    {{ $product->stock_quantity ?? '—' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3">

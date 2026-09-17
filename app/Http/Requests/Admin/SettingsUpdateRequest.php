@@ -23,7 +23,6 @@ class SettingsUpdateRequest extends FormRequest
             'whatsapp' => ['nullable', 'string', 'max:40'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
-            'shipping_fee' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'facebook' => ['nullable', 'url', 'max:255'],
             'instagram' => ['nullable', 'url', 'max:255'],
             'google_maps' => ['nullable', 'string', 'max:2000'],

@@ -102,17 +102,12 @@ class Package extends Model implements Purchasable
         return $this->componentsTotal();
     }
 
-    /**
-     * Maximum number of this package that can currently be fulfilled
-     * based on its components stock, or 0 when a component is missing/inactive.
-     */
-    public function availableQuantity(): int
+    /** Packages can be ordered when all component products are active. */
+    public function availableQuantity(): ?int
     {
         if ($this->items->isEmpty()) {
             return 0;
         }
-
-        $min = null;
 
         foreach ($this->items as $item) {
             $product = $item->product;
@@ -121,22 +116,19 @@ class Package extends Model implements Purchasable
                 return 0;
             }
 
-            $possible = intdiv((int) $product->stock_quantity, max(1, (int) $item->quantity));
-
-            $min = $min === null ? $possible : min($min, $possible);
         }
 
-        return $min ?? 0;
+        return null;
     }
 
     public function isAvailable(): bool
     {
-        return $this->effectivePricing() > 0 && $this->availableQuantity() > 0 && $this->status === ProductStatus::Active;
+        return $this->effectivePricing() > 0 && $this->availableQuantity() === null && $this->status === ProductStatus::Active;
     }
 
     public function isOutOfStock(): bool
     {
-        return $this->items->isEmpty() || $this->availableQuantity() <= 0;
+        return $this->availableQuantity() === 0;
     }
 
     public function stockLabel(): string

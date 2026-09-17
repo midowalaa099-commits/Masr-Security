@@ -85,6 +85,7 @@
                     <div>
                         <x-input-label for="base_price" :value="__('admin.base_price')" />
                         <x-text-input id="base_price" type="number" step="0.01" min="0" name="base_price" class="mt-1 block w-full" :value="old('base_price')" />
+                        <p class="mt-1 text-xs text-slate-500">{{ __('admin.price_includes_shipping') }}</p>
                         <x-input-error :messages="$errors->get('base_price')" class="mt-2" />
                     </div>
                 </div>

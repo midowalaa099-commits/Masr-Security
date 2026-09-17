@@ -21,20 +21,8 @@
                     Sale
                 </span>
             @endif
-            @if ($product->isLowStock())
-                <span class="inline-flex items-center rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
-                    {{ __('store.low_stock') }}
-                </span>
-            @endif
         </div>
 
-        @if ($product->isOutOfStock())
-            <div class="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[2px]">
-                <span class="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
-                    {{ __('store.out_of_stock') }}
-                </span>
-            </div>
-        @endif
     </a>
 
     <div class="flex flex-1 flex-col p-4">
@@ -51,9 +39,10 @@
                     <span class="text-xs line-through text-slate-400">{{ money($product->originalPrice()) }}</span>
                 @endif
                 <span class="text-lg font-bold text-brand-800">{{ money($product->displayPrice()) }}</span>
+                <span class="text-xs font-semibold text-emerald-700">{{ __('store.free_shipping') }}</span>
             </div>
 
-            @if ($showAddToCart && ! $product->isOutOfStock())
+            @if ($showAddToCart && $product->isAvailable())
                 <form method="POST" action="{{ route('cart.add') }}">
                     @csrf
                     <input type="hidden" name="type" value="product">

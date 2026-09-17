@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'price_includes_shipping' => 'Enter the final customer price, including delivery. Checkout adds no shipping fee.',
+    'optional_internal_stock' => 'Optional internal count. Leave blank if untracked; customers can still order when this reaches zero.',
     'dashboard' => 'Dashboard',
     'navigation' => 'Navigation',
     'categories' => 'Categories',

@@ -40,6 +40,9 @@ interface Purchasable
      */
     public function isAvailable(): bool;
 
+    /** Null means an active item has no stock-based ordering limit. */
+    public function availableQuantity(): ?int;
+
     public function isOutOfStock(): bool;
 
     public function stockLabel(): string;

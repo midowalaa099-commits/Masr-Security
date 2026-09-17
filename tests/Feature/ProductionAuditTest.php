@@ -127,6 +127,7 @@ class ProductionAuditTest extends TestCase
         $this->post(route('register'), [
             'name' => 'New Customer',
             'email' => 'new@example.com',
+            'phone' => '01012345678',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('dashboard', absolute: false));
@@ -181,8 +182,8 @@ class ProductionAuditTest extends TestCase
         $order = Order::firstOrFail();
 
         $this->assertSame(2000.0, (float) $order->subtotal);
-        $this->assertSame(60.0, (float) $order->shipping_fee);
-        $this->assertSame(2060.0, (float) $order->total);
+        $this->assertSame(0.0, (float) $order->shipping_fee);
+        $this->assertSame(2000.0, (float) $order->total);
     }
 
     public function test_empty_cart_and_invalid_inputs_are_rejected(): void
@@ -220,7 +221,7 @@ class ProductionAuditTest extends TestCase
 
     // --------------------------------------------------------------- stock
 
-    public function test_checkout_rejects_a_product_that_ran_out_between_add_and_checkout(): void
+    public function test_checkout_accepts_a_product_when_private_stock_reaches_zero(): void
     {
         $product = $this->createProduct(1000, 2);
         $this->addToCart('product', $product->id, 2);
@@ -233,13 +234,13 @@ class ProductionAuditTest extends TestCase
                 'phone' => '01000000000',
                 'payment_method' => 'card',
             ])
-            ->assertRedirect()
-            ->assertSessionHas('error');
+            ->assertRedirect();
 
-        $this->assertSame(0, Order::count());
+        $this->assertSame(1, Order::count());
+        $this->assertSame(-2, (int) $product->fresh()->stock_quantity);
     }
 
-    public function test_checkout_rejects_a_package_whose_component_stock_was_depleted(): void
+    public function test_checkout_accepts_a_package_when_component_stock_is_low(): void
     {
         $componentA = Product::factory()->component()->create(['price' => 500, 'stock_quantity' => 4]);
         Product::factory()->component()->create(['price' => 300, 'stock_quantity' => 10]);
@@ -261,13 +262,13 @@ class ProductionAuditTest extends TestCase
                 'phone' => '01000000000',
                 'payment_method' => 'card',
             ])
-            ->assertRedirect()
-            ->assertSessionHas('error');
+            ->assertRedirect();
 
-        $this->assertSame(0, Order::count());
+        $this->assertSame(1, Order::count());
+        $this->assertSame(-2, (int) $componentA->fresh()->stock_quantity);
     }
 
-    public function test_package_availability_is_bounded_by_its_components(): void
+    public function test_package_availability_ignores_private_component_stock(): void
     {
         $componentA = Product::factory()->component()->create(['price' => 500, 'stock_quantity' => 5]);
         $componentB = Product::factory()->component()->create(['price' => 300, 'stock_quantity' => 5]);
@@ -280,18 +281,17 @@ class ProductionAuditTest extends TestCase
 
         $package->load('items.product');
 
-        $this->assertSame(2, $package->availableQuantity());
+        $this->assertNull($package->availableQuantity());
 
         $this->post(route('cart.add'), [
             'type' => 'package',
             'cartable' => $package->id,
-            'quantity' => 999,
-        ])->assertRedirect()
-            ->assertSessionHas('error');
+            'quantity' => 1,
+        ])->assertRedirect(route('cart.index'));
 
         $this->addToCart('package', $package->id, 2);
 
-        $this->get(route('cart.index'))->assertSee('2,600.00');
+        $this->get(route('cart.index'))->assertSee('3,900.00');
     }
 
     public function test_order_item_snapshots_preserve_price_sku_and_inventory(): void

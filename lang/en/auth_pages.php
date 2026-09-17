@@ -2,6 +2,11 @@
 
 return [
     'email' => 'Email address',
+    'email_or_phone' => 'Email address or mobile number',
+    'account_details' => 'Account details',
+    'account_details_intro' => 'Keep your name, email and mobile number up to date.',
+    'confirm_identity' => 'Current password (required to change email or phone)',
+    'account_updated' => 'Your account details were updated.',
     'password' => 'Password',
     'confirm_password' => 'Confirm password',
     'current_password' => 'Current password',

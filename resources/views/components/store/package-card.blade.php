@@ -22,13 +22,6 @@
             </span>
         @endif
 
-        @if ($package->isOutOfStock())
-            <div class="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[2px]">
-                <span class="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
-                    {{ __('store.out_of_stock') }}
-                </span>
-            </div>
-        @endif
     </a>
 
     <div class="flex flex-1 flex-col p-4">
@@ -45,9 +38,10 @@
         <div class="mt-auto flex items-end justify-between gap-2 pt-3">
             <div class="flex flex-col">
                 <span class="text-lg font-bold text-brand-800">{{ money($package->displayPrice()) }}</span>
+                <span class="text-xs font-semibold text-emerald-700">{{ __('store.free_shipping') }}</span>
             </div>
 
-            @if ($showAddToCart && ! $package->isOutOfStock())
+            @if ($showAddToCart && $package->isAvailable())
                 <form method="POST" action="{{ route('cart.add') }}">
                     @csrf
                     <input type="hidden" name="type" value="package">

@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Cache;
  * Small settings store backed by the settings table and a long lived cache.
  *
  * Example usages:
- *   settings()->get('shipping_fee', '0')
- *   setting('company.phone')
+ *   settings()->get('company_name')
+ *   setting('phone')
  */
 class SettingsService
 {

@@ -9,6 +9,11 @@
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
         {{ __('store.orders') }}
     </a>
+    <a href="{{ route('account.edit') }}"
+        class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {{ request()->routeIs('account.edit') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50' }}">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" /></svg>
+        {{ __('auth_pages.account_details') }}
+    </a>
     <a href="{{ route('account.password') }}"
         class="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('account.password') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700' }}">
         <svg class="h-4 w-4 transition group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 10.125h10.5A2.625 2.625 0 0019.875 18V12.75a2.625 2.625 0 00-2.625-2.625H6.75a2.625 2.625 0 00-2.625 2.625V18a2.625 2.625 0 002.625 2.625z" /></svg>

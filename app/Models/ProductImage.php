@@ -6,6 +6,7 @@ use Database\Factories\ProductImageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
@@ -24,13 +25,20 @@ class ProductImage extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function content(): HasOne
+    {
+        return $this->hasOne(ProductImageContent::class);
+    }
+
     public function getUrlAttribute(): ?string
     {
         if (! $this->path) {
             return null;
         }
 
-        return Storage::disk('public')->url($this->path);
+        return $this->path === 'database'
+            ? route('product-images.show', $this)
+            : Storage::disk('public')->url($this->path);
     }
 
     public function getPathFilenameAttribute(): string

@@ -18,7 +18,7 @@ class CartItemValue
         public readonly string $unitPrice,
         public readonly string $originalPrice,
         public readonly int $quantity,
-        public readonly int $availableQuantity,
+        public readonly ?int $availableQuantity,
         public readonly bool $isAvailable,
         public readonly string $stockLabel,
     ) {}

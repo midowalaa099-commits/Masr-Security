@@ -82,6 +82,31 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('products', ['sku' => 'HIK-TEST-001', 'slug' => 'test-camera']);
     }
 
+    public function test_admin_can_keep_a_negative_internal_stock_count_when_editing(): void
+    {
+        $product = Product::factory()->create(['stock_quantity' => -3]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->assertSee('name="stock_quantity"', false)
+            ->assertDontSee('min="0" name="stock_quantity"', false);
+
+        $this->put(route('admin.products.update', $product), [
+            'sku' => $product->sku,
+            'name_ar' => $product->name_ar,
+            'name_en' => $product->name_en,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'stock_quantity' => -3,
+            'low_stock_threshold' => $product->low_stock_threshold,
+            'status' => $product->status->value,
+            'type' => $product->type->value,
+        ])->assertRedirect(route('admin.products.edit', $product));
+
+        $this->assertSame(-3, (int) $product->fresh()->stock_quantity);
+    }
+
     public function test_admin_cancelling_an_open_order_restores_stock(): void
     {
         $product = Product::factory()->create(['stock_quantity' => 5]);

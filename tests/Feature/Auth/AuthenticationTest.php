@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -68,5 +69,14 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_equivalent_email_and_phone_formats_share_a_login_throttle_key(): void
+    {
+        $keyFor = fn (string $identifier): string => LoginRequest::create('/login', 'POST', ['email' => $identifier])->throttleKey();
+
+        $this->assertSame($keyFor(' Customer@Example.com '), $keyFor('customer@example.com'));
+        $this->assertSame($keyFor('+20 101 234 5678'), $keyFor('٠١٠١٢٣٤٥٦٧٨'));
+        $this->assertSame($keyFor('01012345678'), $keyFor('201012345678'));
     }
 }

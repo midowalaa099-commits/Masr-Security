@@ -47,6 +47,7 @@ return [
     'subtotal' => 'Subtotal',
     'shipping' => 'Shipping',
     'free' => 'Free',
+    'free_shipping' => 'Free shipping included',
     'calculated_at_checkout' => 'Calculated at checkout',
     'some_items_unavailable' => 'Some items are no longer available. Please review your cart before checking out.',
     'total' => 'Total',

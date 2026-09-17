@@ -20,7 +20,6 @@ class AdminSettingsController extends Controller
         'whatsapp',
         'email',
         'address',
-        'shipping_fee',
         'facebook',
         'instagram',
         'google_maps',

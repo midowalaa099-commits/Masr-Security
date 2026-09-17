@@ -22,6 +22,7 @@ class AdminDashboardController extends Controller
 
         $lowStockProducts = Product::query()
             ->where('status', 'active')
+            ->whereNotNull('stock_quantity')
             ->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
             ->with('category')
             ->limit(8)

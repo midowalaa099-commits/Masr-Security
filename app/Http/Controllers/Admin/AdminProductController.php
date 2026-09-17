@@ -12,15 +12,19 @@ use App\Models\PackageItem;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\AuditLogger;
+use App\Services\ProductImageStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminProductController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly ProductImageStorage $images,
+    ) {}
 
     public function index(Request $request)
     {
@@ -53,17 +57,21 @@ class AdminProductController extends Controller
     {
         $data = $request->safe()->except(['images', 'specs']);
 
-        $data['slug'] = $data['slug'] ?: $this->uniqueSlug('product', $data['sku']);
+        $data['slug'] = ($data['slug'] ?? null) ?: $this->uniqueSlug('product', $data['sku']);
         $data['featured'] = $request->boolean('featured');
 
-        $product = Product::create($data);
+        $product = DB::transaction(function () use ($data, $request): Product {
+            $product = Product::create($data);
 
-        $this->storeImages($product, $request->file('images', []));
-        $this->syncSpecs($product, $request->input('specs', []));
+            $this->images->storeMany($product, $request->file('images', []));
+            $this->syncSpecs($product, $request->input('specs', []));
 
-        $this->audit->productCreated($product, $product->only([
-            'sku', 'name_ar', 'name_en', 'slug', 'price', 'sale_price', 'stock_quantity', 'status', 'type', 'featured',
-        ]));
+            $this->audit->productCreated($product, $product->only([
+                'sku', 'name_ar', 'name_en', 'slug', 'price', 'sale_price', 'stock_quantity', 'status', 'type', 'featured',
+            ]));
+
+            return $product;
+        });
 
         return redirect()->route('admin.products.edit', $product)->with('success', __('admin.product_created'));
     }
@@ -90,23 +98,25 @@ class AdminProductController extends Controller
 
         $data = $request->safe()->except(['images', 'specs']);
 
-        $data['slug'] = $data['slug'] ?: $this->uniqueSlug('product', $data['sku'], $product);
+        $data['slug'] = ($data['slug'] ?? null) ?: $this->uniqueSlug('product', $data['sku'], $product);
         $data['featured'] = $request->boolean('featured');
 
-        $product->update($data);
+        DB::transaction(function () use ($product, $data, $request, $old): void {
+            $product->update($data);
 
-        $this->storeImages($product, $request->file('images', []));
-        $this->syncSpecs($product, $request->input('specs', []));
+            $this->images->storeMany($product, $request->file('images', []));
+            $this->syncSpecs($product, $request->input('specs', []));
 
-        if ((string) $old['price'] !== (string) $product->price || (string) $old['sale_price'] !== (string) $product->sale_price) {
-            $this->audit->productPriceChanged($product, (string) $old['price'], (string) $product->price);
-        }
+            if ((string) $old['price'] !== (string) $product->price || (string) $old['sale_price'] !== (string) $product->sale_price) {
+                $this->audit->productPriceChanged($product, (string) $old['price'], (string) $product->price);
+            }
 
-        if ((string) $old['stock_quantity'] !== (string) $product->stock_quantity) {
-            $this->audit->stockChanged($product, (int) $old['stock_quantity'], (int) $product->stock_quantity);
-        }
+            if ((string) $old['stock_quantity'] !== (string) $product->stock_quantity) {
+                $this->audit->stockChanged($product, $old['stock_quantity'], $product->stock_quantity);
+            }
 
-        $this->audit->productUpdated($product, $old, $product->fresh()->only(array_keys($old)));
+            $this->audit->productUpdated($product, $old, $product->fresh()->only(array_keys($old)));
+        });
 
         return redirect()->route('admin.products.edit', $product)->with('success', __('admin.product_updated'));
     }
@@ -126,7 +136,7 @@ class AdminProductController extends Controller
         $this->audit->productDeleted($product, $product->only(['sku', 'name_ar', 'name_en', 'price']));
 
         foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            $this->images->delete($image);
         }
 
         $product->delete();
@@ -140,20 +150,14 @@ class AdminProductController extends Controller
             'image' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:3072'],
         ]);
 
-        $path = $request->file('image')->store('products/'.$product->id, 'public');
-
-        $product->images()->create([
-            'path' => $path,
-            'sort_order' => $product->images()->count(),
-        ]);
+        $this->images->store($product, $request->file('image'));
 
         return back()->with('success', __('admin.image_uploaded'));
     }
 
     public function destroyImage(ProductImage $image): RedirectResponse
     {
-        Storage::disk('public')->delete($image->path);
-        $image->delete();
+        $this->images->delete($image);
 
         return back()->with('success', __('admin.image_deleted'));
     }
@@ -170,20 +174,6 @@ class AdminProductController extends Controller
         }
 
         return response()->json(['ok' => true]);
-    }
-
-    private function storeImages(Product $product, array $files): void
-    {
-        $start = $product->images()->count();
-
-        foreach (array_values($files) as $index => $file) {
-            $path = $file->store('products/'.$product->id, 'public');
-
-            $product->images()->create([
-                'path' => $path,
-                'sort_order' => $start + $index,
-            ]);
-        }
     }
 
     /**
@@ -225,8 +215,7 @@ class AdminProductController extends Controller
 
     private function uniqueSlug(string $kind, string $reference, ?Product $ignore = null): string
     {
-        $base = Str::slug($reference) ?: Str::slug($reference);
-        $base = $base ?: $kind;
+        $base = Str::slug($reference) ?: $kind;
         $slug = $base;
         $i = 2;
 

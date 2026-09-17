@@ -21,6 +21,7 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\Payments\PaymobWebhookController;
 use App\Http\Controllers\Payments\SandboxPaymentController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\ShopController;
 use App\Http\Middleware\SetLocale;
@@ -39,6 +40,7 @@ Route::middleware('storefront')->group(function () {
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/product-images/{image}', [ProductImageController::class, 'show'])->name('product-images.show');
 
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
     Route::get('/packages/{package}', [PackageController::class, 'show'])->name('packages.show');
@@ -78,6 +80,8 @@ Route::middleware('storefront')->group(function () {
 
 Route::middleware(['auth', 'storefront'])->prefix('account')->name('account.')->group(function () {
     Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('/edit', [AccountController::class, 'edit'])->name('edit');
+    Route::patch('/edit', [AccountController::class, 'update'])->name('update');
     Route::get('/password', [AccountController::class, 'password'])->name('password');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}', [AccountController::class, 'show'])->name('orders.show');
