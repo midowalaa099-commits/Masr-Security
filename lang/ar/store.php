@@ -47,7 +47,7 @@ return [
     'subtotal' => 'المجموع الفرعي',
     'shipping' => 'الشحن',
     'free' => 'مجاني',
-    'free_shipping' => 'شحن مجاني مشمول في السعر',
+    'free_shipping' => 'شحن مجاني',
     'calculated_at_checkout' => 'يُحسب عند إتمام الطلب',
     'some_items_unavailable' => 'بعض المنتجات غير متوفرة حالياً. راجع السلة قبل إتمام الطلب.',
     'total' => 'الإجمالي',

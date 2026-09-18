@@ -20,16 +20,14 @@
 
         <div class="mt-4">
             <x-input-label for="password" :value="__('auth_pages.password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <x-auth-password-input id="password" name="password" autocomplete="new-password" variant="default" :show-strength="true" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="password_confirmation" :value="__('auth_pages.confirm_password')" />
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
+            <x-auth-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" variant="default" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>

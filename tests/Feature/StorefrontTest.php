@@ -7,12 +7,24 @@ use App\Models\Package;
 use App\Models\PackageItem;
 use App\Models\Product;
 use App\Models\QuoteRequest;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class StorefrontTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_switching_locale_does_not_create_a_customer_cart(): void
+    {
+        $customer = User::factory()->create();
+
+        $this->actingAs($customer)
+            ->get(route('locale.switch', 'ar'))
+            ->assertRedirect(route('home'));
+
+        $this->assertDatabaseMissing('carts', ['user_id' => $customer->id]);
+    }
 
     public function test_guest_can_view_home_shop_and_informational_pages(): void
     {

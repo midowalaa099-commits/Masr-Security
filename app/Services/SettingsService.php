@@ -23,7 +23,7 @@ class SettingsService
      */
     public function all(): array
     {
-        return Cache::rememberForever(self::CACHE_KEY, function () {
+        return Cache::memo()->rememberForever(self::CACHE_KEY, function () {
             return Setting::query()
                 ->pluck('value', 'key')
                 ->map(fn ($value) => $value === null ? null : (string) $value)
@@ -67,6 +67,6 @@ class SettingsService
 
     public function flushCache(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        Cache::memo()->forget(self::CACHE_KEY);
     }
 }

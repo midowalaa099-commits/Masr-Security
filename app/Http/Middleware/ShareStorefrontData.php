@@ -19,6 +19,10 @@ class ShareStorefrontData
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (! $request->isMethod('GET') || $request->routeIs('locale.switch')) {
+            return $next($request);
+        }
+
         $categories = $this->navigationCategories();
 
         $settings = app(SettingsService::class);

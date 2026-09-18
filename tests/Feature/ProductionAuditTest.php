@@ -128,8 +128,8 @@ class ProductionAuditTest extends TestCase
             'name' => 'New Customer',
             'email' => 'new@example.com',
             'phone' => '01012345678',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
         ])->assertRedirect(route('dashboard', absolute: false));
 
         $user = User::query()->where('email', 'new@example.com')->firstOrFail();

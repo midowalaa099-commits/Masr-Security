@@ -19,6 +19,18 @@ class BrandSettingsTest extends TestCase
         return User::factory()->admin()->create();
     }
 
+    public function test_settings_changes_replace_values_already_read_in_the_same_request(): void
+    {
+        $settings = app(SettingsService::class);
+        $settings->set('company_name', 'Before');
+        $this->assertSame('Before', $settings->get('company_name'));
+
+        $settings->set('company_name', 'After');
+
+        $this->assertSame('After', $settings->get('company_name'));
+        $this->assertDatabaseHas('settings', ['key' => 'company_name', 'value' => 'After']);
+    }
+
     public function test_admin_can_upload_logo_hero_and_gallery_images(): void
     {
         Storage::fake('public');

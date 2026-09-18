@@ -11,17 +11,14 @@
 
         <div>
             <x-input-label for="email" :value="__('auth_pages.email_or_phone')" />
-            <x-text-input id="email" class="mt-1 block w-full" type="text" name="email" :value="old('email')" required autofocus autocomplete="username" dir="ltr" />
+            <x-text-input variant="auth" id="email" class="mt-1 block w-full" type="text" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="Amin.Mohamed@example.com or 01008448112" dir="ltr" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="password" :value="__('auth_pages.password')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+            <x-auth-password-input id="password" name="password" autocomplete="current-password" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>

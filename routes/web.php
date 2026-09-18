@@ -27,6 +27,8 @@ use App\Http\Controllers\ShopController;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/product-images/{image}', [ProductImageController::class, 'show'])->name('product-images.show');
+
 /*
 |--------------------------------------------------------------------------
 | Storefront
@@ -40,7 +42,6 @@ Route::middleware('storefront')->group(function () {
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/product-images/{image}', [ProductImageController::class, 'show'])->name('product-images.show');
 
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
     Route::get('/packages/{package}', [PackageController::class, 'show'])->name('packages.show');

@@ -23,6 +23,8 @@ class AuthenticationTest extends TestCase
             ->assertSee(__('auth_pages.no_account'))
             ->assertSee(__('auth_pages.create_account_now'))
             ->assertSee('href="'.route('register').'"', false);
+
+        $this->assertSame(1, substr_count($response->getContent(), 'x-on:click="showPassword = !showPassword"'));
     }
 
     public function test_arabic_login_screen_links_to_registration(): void

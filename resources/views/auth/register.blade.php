@@ -9,29 +9,26 @@
 
         <div>
             <x-input-label for="name" :value="__('auth_pages.name')" />
-            <x-text-input id="name" class="mt-1 block w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <x-text-input variant="auth" id="name" class="mt-1 block w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Amin Mohamed" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="email" :value="__('auth_pages.email')" />
-            <x-text-input id="email" class="mt-1 block w-full" type="email" name="email" :value="old('email')" required autocomplete="username" dir="ltr" />
+            <x-text-input variant="auth" id="email" class="mt-1 block w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="Amin.Mohamed@example.com" dir="ltr" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="phone" :value="__('store.phone')" />
-            <x-text-input id="phone" class="mt-1 block w-full" type="tel" name="phone" :value="old('phone')" required autocomplete="tel" inputmode="tel" placeholder="01012345678" dir="ltr" />
+            <x-text-input variant="auth" id="phone" class="mt-1 block w-full" type="tel" name="phone" :value="old('phone')" required autocomplete="tel" inputmode="tel" placeholder="01008448112" dir="ltr" />
             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="password" :value="__('auth_pages.password')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <x-auth-password-input id="password" name="password" autocomplete="new-password" :show-strength="true" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
@@ -39,9 +36,7 @@
         <div class="mt-4">
             <x-input-label for="password_confirmation" :value="__('auth_pages.confirm_password')" />
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <x-auth-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>

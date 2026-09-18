@@ -18,6 +18,7 @@ use App\Services\Payments\PaymobGateway;
 use App\Services\SettingsService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +38,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(fn (User $user) => $user->isAdmin() ? true : null);
+        Password::defaults(function (): Password {
+            $rule = Password::min(8)
+                ->mixedCase()
+                ->numbers()
+                ->symbols();
+
+            return config('app.env') === 'production'
+                ? $rule->uncompromised()
+                : $rule;
+        });
 
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);

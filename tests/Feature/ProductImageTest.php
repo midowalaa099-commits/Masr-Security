@@ -48,6 +48,24 @@ class ProductImageTest extends TestCase
         $this->get($image->url)->assertOk()->assertHeader('Content-Type', 'image/jpeg');
     }
 
+    public function test_serving_a_product_image_does_not_create_a_customer_cart(): void
+    {
+        $customer = User::factory()->create();
+        $product = Product::factory()->create();
+        $image = $product->images()->create(['path' => 'database', 'sort_order' => 0]);
+        $image->content()->create([
+            'mime_type' => 'image/png',
+            'contents' => base64_encode('image bytes'),
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('product-images.show', $image))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png');
+
+        $this->assertDatabaseMissing('carts', ['user_id' => $customer->id]);
+    }
+
     public function test_admin_can_create_a_product_with_an_image_and_optional_stock(): void
     {
         $admin = User::factory()->admin()->create();
