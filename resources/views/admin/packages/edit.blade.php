@@ -1,4 +1,5 @@
 <x-admin.layout title="{{ __('admin.packages') }}">
+    <x-admin.page-heading :title="__('admin.edit').' · '.$package->name_en" :description="__('admin.packages_page_intro')" />
 
     @php
         $statuses = \App\Enums\ProductStatus::cases();
@@ -14,12 +15,15 @@
     @endphp
 
     <form method="POST" action="{{ route('admin.packages.update', $package) }}" enctype="multipart/form-data"
-        class="space-y-6">
+        class="mx-auto max-w-6xl space-y-6">
         @csrf
         @method('PUT')
 
-        <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.package_info') }}</h2>
+        <div class="ui-panel space-y-6 rounded-3xl p-5 sm:p-8">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-5">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9.75m-9 5.25L3 16.5m9 5.25v-11m0 0l-9-5.25m9 5.25l9-5.25" /></svg></span>
+                <div><h2 class="text-base font-bold text-slate-900">{{ __('admin.package_info') }}</h2><p class="mt-0.5 text-xs text-slate-500">{{ __('admin.packages_page_intro') }}</p></div>
+            </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -175,9 +179,9 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-lg bg-brand-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-800">{{ __('admin.save') }}</button>
-            <a href="{{ route('admin.packages.index') }}" class="text-sm font-semibold text-slate-500 hover:text-slate-700">{{ __('admin.cancel') }}</a>
+        <div class="flex flex-wrap items-center justify-end gap-3">
+            <a href="{{ route('admin.packages.index') }}" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{{ __('admin.cancel') }}</a>
+            <button type="submit" class="ui-button-primary">{{ __('admin.save') }}</button>
         </div>
     </form>
 

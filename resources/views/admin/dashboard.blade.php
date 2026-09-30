@@ -1,5 +1,7 @@
 <x-admin.layout title="{{ __('admin.dashboard') }}">
 
+    <x-admin.page-heading :title="__('admin.dashboard')" />
+
     @php
         $statCards = [
             ['label' => __('admin.total_revenue'), 'value' => money($revenue), 'icon' => 'money', 'color' => 'bg-emerald-100 text-emerald-600'],

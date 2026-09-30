@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Category;
 use App\Services\CartService;
+use App\Services\CatalogCategories;
 use App\Services\SettingsService;
 use Closure;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -37,22 +37,14 @@ class ShareStorefrontData
         return $next($request);
     }
 
-    private function navigationCategories()
+    private function navigationCategories(): Collection
     {
-        $ids = Cache::remember('storefront.nav.category_ids', 3600, function () {
-            return Category::query()
-                ->whereNull('parent_id')
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->pluck('id')
-                ->all();
-        });
+        $categories = app(CatalogCategories::class)->active();
+        $groups = $categories->groupBy('parent_id');
+        foreach ($categories as $category) {
+            $category->setRelation('children', $groups->get($category->id, new Collection));
+        }
 
-        return Category::query()
-            ->whereKey($ids)
-            ->where('is_active', true)
-            ->with(['children' => fn ($q) => $q->where('is_active', true)])
-            ->orderBy('sort_order')
-            ->get();
+        return $categories->whereNull('parent_id');
     }
 }

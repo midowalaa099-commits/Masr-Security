@@ -1,30 +1,42 @@
 <x-admin.layout title="{{ __('admin.products') }}">
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <x-admin.page-heading
+        :title="__('admin.products')"
+        :description="__('admin.products_page_intro')"
+        :count="$products->total()"
+        :count-label="__('admin.products')"
+    >
+        <a href="{{ route('admin.brands.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3.48a3.75 3.75 0 015.304 0l5.648 5.648a3.75 3.75 0 010 5.304l-5.648 5.648a3.75 3.75 0 01-5.304 0L3.92 14.432a3.75 3.75 0 010-5.304l5.648-5.648z" /></svg>
+            {{ __('admin.brands') }}
+        </a>
+        <a href="{{ route('admin.products.create') }}" class="ui-button-primary">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            {{ __('admin.add_new') }}
+        </a>
+    </x-admin.page-heading>
+
+    <div class="ui-panel mb-5 p-3 sm:p-4">
         <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap items-center gap-2">
             <input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}"
-                class="rounded-lg border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500">
-            <select name="status" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+                class="min-w-0 flex-1 rounded-xl border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:ring-brand-500 sm:max-w-xs">
+            <select name="status" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">— {{ __('admin.status') }} —</option>
                 @foreach ($statuses as $status)
                     <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
                 @endforeach
             </select>
-            <select name="category" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+            <select name="category" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">— {{ __('admin.categories') }} —</option>
                 @foreach ($categories as $category)
                     <option value="{{ $category->id }}" @selected((string) request('category') === (string) $category->id)>{{ $category->name_en }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-900">{{ __('admin.search') }}</button>
+            <button type="submit" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800">{{ __('admin.search') }}</button>
         </form>
-        <a href="{{ route('admin.products.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            {{ __('admin.add_new') }}
-        </a>
     </div>
 
-    <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="ui-panel overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

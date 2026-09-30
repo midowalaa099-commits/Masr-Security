@@ -1,18 +1,26 @@
 <x-admin.layout title="{{ __('admin.categories') }}">
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <form method="GET" action="{{ route('admin.categories.index') }}" class="flex items-center gap-2">
-            <input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}"
-                class="rounded-lg border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500">
-            <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-900">{{ __('admin.search') }}</button>
-        </form>
-        <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+    <x-admin.page-heading
+        :title="__('admin.categories')"
+        :description="__('admin.categories_page_intro')"
+        :count="$categories->total()"
+        :count-label="__('admin.categories')"
+    >
+        <a href="{{ route('admin.categories.create') }}" class="ui-button-primary">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             {{ __('admin.add_new') }}
         </a>
+    </x-admin.page-heading>
+
+    <div class="ui-panel mb-5 p-3 sm:p-4">
+        <form method="GET" action="{{ route('admin.categories.index') }}" class="flex flex-wrap items-center gap-2">
+            <input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}"
+                class="min-w-0 flex-1 rounded-xl border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:ring-brand-500 sm:max-w-sm">
+            <button type="submit" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800">{{ __('admin.search') }}</button>
+        </form>
     </div>
 
-    <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="ui-panel overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

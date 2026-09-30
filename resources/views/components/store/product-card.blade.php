@@ -4,7 +4,7 @@
     $href = route('products.show', $product);
 @endphp
 
-<div class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+<div class="ui-panel group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10">
     <a href="{{ $href }}" class="relative block aspect-[4/3] overflow-hidden bg-slate-100">
         @if ($product->firstImageUrl())
             <img src="{{ $product->firstImageUrl() }}" alt="{{ $product->trans('name') }}" loading="lazy"
@@ -27,9 +27,9 @@
 
     <div class="flex flex-1 flex-col p-4">
         @if ($product->category)
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-brand-600">{{ $product->category->trans('name') }}</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-600">{{ $product->category->trans('name') }}</span>
         @endif
-        <a href="{{ $href }}" class="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 hover:text-brand-700">
+        <a href="{{ $href }}" class="mt-1 line-clamp-2 text-sm font-bold leading-6 text-slate-900 transition hover:text-brand-700">
             {{ $product->trans('name') }}
         </a>
 

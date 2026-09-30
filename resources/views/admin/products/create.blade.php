@@ -5,12 +5,35 @@
         $types = \App\Enums\ProductType::cases();
     @endphp
 
-    <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data"
-        class="space-y-6">
-        @csrf
+    <div class="mx-auto w-full max-w-7xl">
+        <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <a href="{{ route('admin.products.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-700">
+                    <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                    {{ __('admin.products') }}
+                </a>
+                <h1 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-950">{{ __('admin.product_info') }}</h1>
+            </div>
+            <span class="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-800">
+                <span class="h-2 w-2 rounded-full bg-brand-600"></span>
+                {{ __('admin.add_new') }}
+            </span>
+        </div>
 
-        <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.product_info') }}</h2>
+        <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data"
+            class="space-y-7">
+            @csrf
+
+        <div class="ui-panel space-y-6 rounded-3xl p-5 sm:p-8">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-5">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                </span>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">{{ __('admin.product_info') }}</h2>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ __('admin.add_new') }} · {{ __('admin.products') }}</p>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -25,7 +48,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div>
                     <x-input-label for="sku" :value="__('admin.sku')" />
                     <x-text-input id="sku" name="sku" class="mt-1 block w-full" :value="old('sku')" dir="ltr" placeholder="HIK-DS-2CD" required />
@@ -46,16 +69,14 @@
                     </select>
                     <x-input-error :messages="$errors->get('category_id')" class="mt-2" />
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <x-admin.product-brand-selector :brands="$brands" />
                 <div>
                     <x-input-label for="model_number" :value="__('admin.model_number')" />
-                    <x-text-input id="model_number" name="model_number" class="mt-1 block w-full" :value="old('model_number')" />
+                    <x-text-input id="model_number" name="model_number" class="mt-1.5 block w-full" :value="old('model_number')" />
                     <x-input-error :messages="$errors->get('model_number')" class="mt-2" />
                 </div>
             </div>
+
+            <x-admin.product-brand-selector :brands="$brands" />
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -74,7 +95,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="ui-panel space-y-6 rounded-3xl p-5 sm:p-7">
                 <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.pricing') }}</h2>
 
                 <div>
@@ -132,7 +153,7 @@
                 </label>
             </div>
 
-            <div class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+            <div class="ui-panel space-y-6 rounded-3xl p-5 sm:p-7 lg:col-span-2">
                 <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.images') }}</h2>
 
                 <input type="file" name="images[]" multiple accept="image/*"
@@ -165,10 +186,17 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-lg bg-brand-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-800">{{ __('admin.create') }}</button>
-            <a href="{{ route('admin.products.index') }}" class="text-sm font-semibold text-slate-500 hover:text-slate-700">{{ __('admin.cancel') }}</a>
+        <div class="sticky bottom-3 z-10 -mx-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-xl shadow-slate-900/10 backdrop-blur-xl sm:mx-0 sm:px-5">
+            <p class="hidden text-xs font-medium text-slate-500 sm:block">{{ __('admin.product_info') }}</p>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.products.index') }}" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{{ __('admin.cancel') }}</a>
+                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-900/15 transition hover:-translate-y-0.5 hover:bg-brand-800">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6" /></svg>
+                    {{ __('admin.create') }}
+                </button>
+            </div>
         </div>
-    </form>
+        </form>
+    </div>
 
 </x-admin.layout>

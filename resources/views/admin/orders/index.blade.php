@@ -1,22 +1,24 @@
 <x-admin.layout title="{{ __('admin.orders') }}">
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <x-admin.page-heading :title="__('admin.orders')" :description="__('admin.orders_page_intro')" :count="$orders->total()" :count-label="__('admin.orders')" />
+
+    <div class="ui-panel mb-5 p-3 sm:p-4">
         <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-wrap items-center gap-2">
             <input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.search') }}"
-                class="rounded-lg border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500">
-            <select name="status" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+                class="min-w-0 flex-1 rounded-xl border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:ring-brand-500 sm:max-w-xs">
+            <select name="status" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">— {{ __('admin.status') }} —</option>
                 @foreach ($statuses as $status)
                     <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
                 @endforeach
             </select>
-            <input type="date" name="from" value="{{ request('from') }}" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
-            <input type="date" name="to" value="{{ request('to') }}" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
-            <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-900">{{ __('admin.search') }}</button>
+            <input type="date" name="from" value="{{ request('from') }}" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
+            <input type="date" name="to" value="{{ request('to') }}" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
+            <button type="submit" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800">{{ __('admin.search') }}</button>
         </form>
     </div>
 
-    <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="ui-panel overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

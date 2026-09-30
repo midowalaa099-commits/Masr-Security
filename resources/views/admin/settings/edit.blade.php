@@ -1,10 +1,12 @@
 <x-admin.layout title="{{ __('admin.settings') }}">
 
-    <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="max-w-3xl space-y-6">
+    <x-admin.page-heading :title="__('admin.settings')" :description="__('admin.settings_page_intro')" />
+
+    <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="mx-auto max-w-5xl space-y-6">
         @csrf
         @method('PUT')
 
-        <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-panel space-y-5 rounded-3xl p-5 sm:p-7">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.company_name') }}</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -37,7 +39,7 @@
             </div>
         </div>
 
-        <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-panel space-y-5 rounded-3xl p-5 sm:p-7">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.brand_assets') }}</h2>
             <div>
                 <x-input-label for="site_logo" :value="__('admin.site_logo')" />
@@ -56,7 +58,7 @@
             </div>
         </div>
 
-        <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-panel space-y-5 rounded-3xl p-5 sm:p-7">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.hero_section') }}</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -107,7 +109,7 @@
             </div>
         </div>
 
-        <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-panel space-y-5 rounded-3xl p-5 sm:p-7">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.gallery') }}</h2>
             @if (setting_array('gallery_images'))
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -142,9 +144,9 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-lg bg-brand-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-800">{{ __('admin.save') }}</button>
-            <a href="{{ route('admin.dashboard') }}" class="text-sm font-semibold text-slate-500 hover:text-slate-700">{{ __('admin.cancel') }}</a>
+        <div class="sticky bottom-3 z-10 flex items-center justify-end gap-3 rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-xl shadow-slate-900/10 backdrop-blur-xl sm:px-5">
+            <a href="{{ route('admin.dashboard') }}" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{{ __('admin.cancel') }}</a>
+            <button type="submit" class="ui-button-primary">{{ __('admin.save') }}</button>
         </div>
     </form>
 

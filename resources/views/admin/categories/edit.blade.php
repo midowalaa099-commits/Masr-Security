@@ -1,6 +1,8 @@
 <x-admin.layout title="{{ __('admin.categories') }}">
+    <x-admin.page-heading :title="__('admin.edit').' · '.$category->name_en" :description="__('admin.categories_page_intro')" />
+
     <form method="POST" action="{{ route('admin.categories.update', $category) }}" enctype="multipart/form-data"
-        class="max-w-3xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        class="ui-panel max-w-4xl space-y-6 rounded-3xl p-5 sm:p-8">
         @csrf
         @method('PUT')
 
@@ -66,9 +68,9 @@
             {{ __('admin.status_active') }}
         </label>
 
-        <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-lg bg-brand-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-800">{{ __('admin.save') }}</button>
-            <a href="{{ route('admin.categories.index') }}" class="text-sm font-semibold text-slate-500 hover:text-slate-700">{{ __('admin.cancel') }}</a>
+        <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-5">
+            <a href="{{ route('admin.categories.index') }}" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{{ __('admin.cancel') }}</a>
+            <button type="submit" class="ui-button-primary">{{ __('admin.save') }}</button>
         </div>
     </form>
 </x-admin.layout>

@@ -9,7 +9,7 @@
     <meta name="description" content="{{ setting('hero_subtitle_'.app()->getLocale()) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full overflow-x-hidden bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ mobileOpen: false, searchOpen: false }">
+<body data-app-shell="store" class="min-h-full overflow-x-hidden bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ mobileOpen: false, searchOpen: false }">
 
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-white">
         {{ __('store.skip_to_content') }}
@@ -163,6 +163,13 @@
         <!-- Search bar -->
         <div id="store-header-search" x-show="searchOpen" x-cloak x-transition class="border-t border-slate-200 bg-slate-50">
             <form action="{{ route('shop') }}" method="GET" class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3">
+                @if (request()->routeIs('shop'))
+                    @foreach (request()->only(['section', 'category', 'min_price', 'max_price', 'sort']) as $filter => $value)
+                        @if (is_scalar($value))
+                            <input type="hidden" name="{{ $filter }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                @endif
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="{{ __('store.search_placeholder') }}"
                     class="w-full flex-1 rounded-lg border-slate-300 bg-white px-4 py-2 text-sm text-slate-800 focus:border-brand-500 focus:ring-brand-500">
                 <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">

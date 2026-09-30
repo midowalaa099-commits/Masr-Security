@@ -8,16 +8,16 @@
     <title>{{ isset($title) ? $title.' — '.__('admin.dashboard').' — '.setting('company_name') : __('admin.dashboard').' — '.setting('company_name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-slate-100 font-sans text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
+<body data-app-shell="admin" class="h-full bg-slate-50 font-sans text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
 
     <div class="flex min-h-full">
         <!-- Sidebar -->
         <div x-show="sidebarOpen" x-cloak x-transition class="fixed inset-0 z-40 bg-navy-950/60 lg:hidden" @click="sidebarOpen = false"></div>
         <aside
-            class="fixed inset-y-0 start-0 z-50 flex w-64 transform flex-col bg-navy-950 transition-transform lg:static lg:translate-x-0"
+            class="fixed inset-y-0 start-0 z-50 flex w-72 transform flex-col bg-gradient-to-b from-[#0b1631] via-navy-950 to-[#081324] shadow-2xl shadow-slate-950/20 transition-transform lg:static lg:translate-x-0 lg:shadow-none"
             :class="sidebarOpen ? 'translate-x-0' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full'">
 
-            <div class="flex items-center justify-between gap-3 px-5 py-5">
+            <div class="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-5">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5">
                     @if (setting('site_logo'))
                         <img src="{{ media_url(setting('site_logo')) }}" alt="{{ setting('company_name') ?: 'MASR Security' }}" class="h-10 max-w-44 object-contain object-start">
@@ -67,8 +67,8 @@
 
                 @foreach ($nav as $item)
                     <a href="{{ route($item['route']) }}"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*') ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">{!! $icons[$item['icon']] !!}</svg>
+                        class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition {{ request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-950/30 ring-1 ring-white/10' : 'text-slate-300 hover:bg-white/[0.07] hover:text-white' }}">
+                        <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">{!! $icons[$item['icon']] !!}</svg>
                         {{ $item['label'] }}
                     </a>
                 @endforeach
@@ -84,13 +84,18 @@
 
         <!-- Main -->
         <div class="flex min-w-0 flex-1 flex-col">
-            <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 shadow-[0_8px_24px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                 <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
                     <div class="flex items-center gap-3">
                         <button @click="sidebarOpen = true" type="button" class="inline-flex items-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" aria-label="Menu">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
                         </button>
-                        <h1 class="text-lg font-bold text-slate-900">{{ $title ?? __('admin.dashboard') }}</h1>
+                        <p class="hidden text-xs font-bold tracking-wide text-slate-500 sm:block">
+                            @if (isset($title) && $title !== __('admin.dashboard'))
+                                {{ __('admin.dashboard') }} <span class="mx-1 text-slate-300">/</span>
+                            @endif
+                            <span class="text-slate-800">{{ $title ?? __('admin.dashboard') }}</span>
+                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -121,7 +126,7 @@
                 </div>
             </header>
 
-            <main class="flex-1 px-4 py-6 sm:px-6">
+            <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
                 @if (session('success') || session('error') || session('info'))
                     <div class="mb-6">
                         @if (session('success'))

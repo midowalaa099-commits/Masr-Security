@@ -1,19 +1,21 @@
 <x-admin.layout title="{{ __('admin.payments') }}">
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <form method="GET" action="{{ route('admin.payments.index') }}" class="flex items-center gap-2">
-            <select name="status" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+    <x-admin.page-heading :title="__('admin.payments')" :description="__('admin.payments_page_intro')" :count="$payments->total()" :count-label="__('admin.payments')" />
+
+    <div class="ui-panel mb-5 p-3 sm:p-4">
+        <form method="GET" action="{{ route('admin.payments.index') }}" class="flex flex-wrap items-center gap-2">
+            <select name="status" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">— {{ __('admin.status') }} —</option>
                 @foreach ($statuses as $status)
                     <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
                 @endforeach
             </select>
-            <select name="provider" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+            <select name="provider" class="rounded-xl border-slate-200 px-3 py-2.5 text-sm">
                 <option value="">— {{ __('admin.provider') }} —</option>
                 <option value="paymob" @selected(request('provider') === 'paymob')>Paymob</option>
                 <option value="sandbox" @selected(request('provider') === 'sandbox')>Sandbox</option>
             </select>
-            <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-900">{{ __('admin.search') }}</button>
+            <button type="submit" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800">{{ __('admin.search') }}</button>
         </form>
     </div>
 
@@ -26,7 +28,7 @@
         ];
     @endphp
 
-    <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="ui-panel overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>

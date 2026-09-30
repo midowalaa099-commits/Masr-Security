@@ -14,10 +14,12 @@ use App\Policies\OrderPolicy;
 use App\Policies\PackagePolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\QuoteRequestPolicy;
+use App\Services\CatalogCategories;
 use App\Services\Payments\PaymobGateway;
 use App\Services\SettingsService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +44,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('quote-submissions', fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
+
+        foreach (['saved', 'deleted'] as $event) {
+            Category::$event(function (): void {
+                CatalogCategories::forget();
+                DB::afterCommit(fn () => CatalogCategories::forget());
+            });
+        }
 
         Product::updating(function (Product $product): void {
             if ($product->isDirty(['price', 'sale_price'])) {

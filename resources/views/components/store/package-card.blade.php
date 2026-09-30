@@ -4,7 +4,7 @@
     $href = route('packages.show', $package);
 @endphp
 
-<div class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+<div class="ui-panel group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/10">
     <a href="{{ $href }}" class="relative block aspect-[4/3] overflow-hidden bg-slate-100">
         @if ($package->firstImageUrl())
             <img src="{{ $package->firstImageUrl() }}" alt="{{ $package->trans('name') }}" loading="lazy"
@@ -25,13 +25,13 @@
     </a>
 
     <div class="flex flex-1 flex-col p-4">
-        <a href="{{ $href }}" class="line-clamp-2 text-sm font-semibold text-slate-900 hover:text-brand-700">
+        <a href="{{ $href }}" class="line-clamp-2 text-sm font-bold leading-6 text-slate-900 transition hover:text-brand-700">
             {{ $package->trans('name') }}
         </a>
 
         <div class="mt-2">
             @if ($package->useComponentPricing())
-                <span class="text-[11px] font-medium text-emerald-600">{{ __('store.pkg_savings') }}: {{ money($package->discount_amount) }}</span>
+                <span class="inline-flex w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{{ __('store.pkg_savings') }}: {{ money($package->discount_amount) }}</span>
             @endif
         </div>
 
