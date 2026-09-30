@@ -42,6 +42,7 @@
                         ['route' => 'admin.dashboard', 'label' => __('admin.dashboard'), 'icon' => 'grid'],
                         ['route' => 'admin.categories.index', 'label' => __('admin.categories'), 'icon' => 'folder'],
                         ['route' => 'admin.products.index', 'label' => __('admin.products'), 'icon' => 'camera'],
+                        ['route' => 'admin.pricing.index', 'label' => __('pricing.title'), 'icon' => 'card'],
                         ['route' => 'admin.packages.index', 'label' => __('admin.packages'), 'icon' => 'box'],
                         ['route' => 'admin.orders.index', 'label' => __('admin.orders'), 'icon' => 'cart'],
                         ['route' => 'admin.payments.index', 'label' => __('admin.payments'), 'icon' => 'card'],

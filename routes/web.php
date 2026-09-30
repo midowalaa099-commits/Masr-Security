@@ -3,6 +3,7 @@
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
+use App\Http\Controllers\Admin\AdminBulkPricingController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -129,6 +130,12 @@ Route::prefix('admin')
 
         Route::resource('categories', AdminCategoryController::class)->except(['show']);
         Route::patch('categories/{category}/toggle', [AdminCategoryController::class, 'toggle'])->name('categories.toggle');
+
+        Route::get('pricing', [AdminBulkPricingController::class, 'index'])->name('pricing.index');
+        Route::post('pricing', [AdminBulkPricingController::class, 'store'])->name('pricing.store');
+        Route::get('pricing/{batch}', [AdminBulkPricingController::class, 'show'])->whereNumber('batch')->name('pricing.show');
+        Route::post('pricing/{batch}/apply', [AdminBulkPricingController::class, 'apply'])->whereNumber('batch')->name('pricing.apply');
+        Route::post('pricing/{batch}/undo', [AdminBulkPricingController::class, 'undo'])->whereNumber('batch')->name('pricing.undo');
 
         Route::resource('products', AdminProductController::class);
         Route::post('products/{product}/images', [AdminProductController::class, 'storeImage'])->name('products.images.store');

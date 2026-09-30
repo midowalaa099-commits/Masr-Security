@@ -10,11 +10,40 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class CartTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[TestWith([1])]
+    #[TestWith([10])]
+    public function test_mixed_cart_resolution_has_a_constant_query_count(int $linePairs): void
+    {
+        $entries = [];
+        for ($index = 0; $index < $linePairs; $index++) {
+            $product = Product::factory()->hasImages(1)->create(['price' => 500]);
+            $package = Package::factory()->create(['discount_amount' => 100, 'cover_image' => null]);
+            PackageItem::factory()->for($package)->for($product, 'product')->create(['quantity' => 2]);
+            $entries[] = ['type' => 'product', 'id' => $product->id, 'quantity' => 1];
+            $entries[] = ['type' => 'package', 'id' => $package->id, 'quantity' => 1];
+        }
+        session()->put(CartService::SESSION_KEY, $entries);
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        $items = app(CartService::class)->items();
+
+        $this->assertCount(4, DB::getQueryLog());
+        DB::disableQueryLog();
+        $this->assertCount($linePairs * 2, $items);
+        $this->assertSame('500.00', $items[0]->unitPrice);
+        $this->assertSame('900.00', $items[1]->unitPrice);
+        $this->assertSame($items[0]->imageUrl, $items[1]->imageUrl);
+        $this->assertNotNull($items[1]->imageUrl);
+    }
 
     public function test_guest_can_add_a_product_and_see_the_total(): void
     {

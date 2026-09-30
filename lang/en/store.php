@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'cart_prices_changed' => 'Prices in your cart have changed. Please review the updated total before placing your order.',
+    'cart_unavailable_review' => 'An item in your cart is no longer available. Please review your cart.',
     'currency_egp' => 'EGP',
     'home' => 'Home',
     'skip_to_content' => 'Skip to content',

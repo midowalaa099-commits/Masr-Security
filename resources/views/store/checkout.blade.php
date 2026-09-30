@@ -1,15 +1,18 @@
 <x-store.layout>
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-bold text-slate-900">{{ __('store.checkout') }}</h1>
-        <p class="mt-1 text-sm text-slate-500">{{ __('store.guest_note') }}</p>
+        <div>
+            <span class="ui-eyebrow">{{ __('store.cart') }}</span>
+            <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{{ __('store.checkout') }}</h1>
+            <p class="mt-2 text-sm text-slate-500">{{ __('store.guest_note') }}</p>
+        </div>
 
         <form method="POST" action="{{ route('checkout.store') }}" x-data="{ method: '{{ old('payment_method', 'cash_on_delivery') }}' }" class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
             @csrf
 
             <div class="space-y-6">
                 <!-- Contact -->
-                <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <section class="ui-panel p-6">
                     <h2 class="flex items-center gap-2 text-base font-bold text-slate-900">
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
                         {{ __('store.contact') }}
@@ -38,7 +41,7 @@
                 </section>
 
                 <!-- Delivery -->
-                <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <section class="ui-panel p-6">
                     <h2 class="flex items-center gap-2 text-base font-bold text-slate-900">
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">2</span>
                         {{ __('store.delivery_to') }}
@@ -73,7 +76,7 @@
                 </section>
 
                 <!-- Payment -->
-                <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <section class="ui-panel p-6">
                     <h2 class="flex items-center gap-2 text-base font-bold text-slate-900">
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">3</span>
                         {{ __('store.payment_method') }}
@@ -123,7 +126,7 @@
             </div>
 
             <!-- Summary -->
-            <aside class="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-28">
+            <aside class="ui-panel h-fit p-6 lg:sticky lg:top-28">
                 <h2 class="text-base font-bold text-slate-900">{{ __('store.cart') }} ({{ $items->count() }})</h2>
 
                 <ul class="mt-4 max-h-72 space-y-3 overflow-y-auto pe-1">

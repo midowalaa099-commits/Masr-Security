@@ -32,8 +32,8 @@ class CartController extends Controller
         ]);
 
         $purchasable = $validated['type'] === 'package'
-            ? Package::query()->with('items.product')->where('status', 'active')->findOrFail($validated['cartable'])
-            : Product::query()->where('status', 'active')->findOrFail($validated['cartable']);
+            ? Package::query()->active()->with('items.product')->findOrFail($validated['cartable'])
+            : Product::query()->active()->findOrFail($validated['cartable']);
 
         try {
             app(InventoryService::class)->assertSufficientStock($purchasable, (int) $validated['quantity']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
 use App\Exceptions\CartEmptyException;
+use App\Exceptions\CartPriceChangedException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\PaymentGatewayException;
 use App\Http\Requests\CheckoutRequest;
@@ -26,13 +27,23 @@ class CheckoutController extends Controller
 
     public function index()
     {
+        $rawEntries = $this->cart->rawEntries();
         $items = $this->cart->items();
+
+        if (count($rawEntries) !== $items->count()) {
+            return redirect()->route('cart.index')->with('error', __('store.some_items_unavailable'));
+        }
 
         if ($items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', __('store.cart_empty'));
         }
 
-        $subtotal = $this->cart->subtotal();
+        if ($this->cart->pricesNeedReview($items)) {
+            session()->now('error', __('store.cart_prices_changed'));
+        }
+
+        $this->cart->rememberReviewedPrices($items);
+        $subtotal = round($items->sum(fn ($item): float => (float) $item->lineTotal()), 2);
         $shippingFee = $this->checkout->calculateShipping($subtotal);
 
         return view('store.checkout', [
@@ -71,6 +82,9 @@ class CheckoutController extends Controller
             ]));
         } catch (CartEmptyException) {
             return redirect()->route('cart.index')->with('error', __('store.cart_empty'));
+        } catch (CartPriceChangedException) {
+            return redirect()->route('checkout.index')
+                ->with('error', __('store.cart_prices_changed'))->withInput();
         } catch (InsufficientStockException $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

@@ -1,7 +1,18 @@
 <x-store.layout>
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-bold text-slate-900">{{ __('store.cart') }} @if ($items->isNotEmpty())(<span class="text-base font-medium text-slate-400">{{ $items->sum('quantity') }}</span>)@endif</h1>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <span class="ui-eyebrow">{{ __('store.shop') }}</span>
+                <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{{ __('store.cart') }} @if ($items->isNotEmpty())<span class="ms-1 align-middle text-base font-semibold text-slate-400">({{ $items->sum('quantity') }})</span>@endif</h1>
+            </div>
+            @if ($items->isNotEmpty())
+                <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 text-sm font-bold text-brand-700 transition hover:text-brand-800">
+                    {{ __('store.continue_shopping') }}
+                    <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                </a>
+            @endif
+        </div>
 
         @if ($items->isEmpty())
             <div class="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-20 text-center">
@@ -13,7 +24,7 @@
             </div>
         @else
             <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="ui-panel overflow-hidden">
                     <ul class="divide-y divide-slate-100">
                         @foreach ($items as $item)
                             <li class="flex gap-4 p-4 sm:p-5">
@@ -87,7 +98,7 @@
                 </div>
 
                 <!-- Summary -->
-                <aside class="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-28">
+                <aside class="ui-panel h-fit p-6 lg:sticky lg:top-28">
                     <h2 class="text-lg font-bold text-slate-900">{{ __('store.cart') }}</h2>
 
                     <dl class="mt-5 space-y-3 text-sm">

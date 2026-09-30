@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Contracts\Purchasable;
 use App\Enums\ProductStatus;
+use App\Exceptions\InsufficientStockException;
 use App\Models\Cart;
 use App\Models\Package;
+use App\Models\PackageItem;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -67,17 +69,46 @@ class CartService
     }
 
     /**
+     * Checkout callers must hold a database transaction for the requested row locks.
+     *
      * @return Collection<int, CartItemValue>
      */
-    public function items(): Collection
+    public function items(bool $lockForCheckout = false): Collection
     {
         $entries = $this->rawEntries();
 
-        $rows = collect($entries)->map(function (array $entry) {
-            $purchasable = $this->resolve($entry['type'], $entry['id']);
+        $packageIds = collect($entries)->where('type', 'package')->pluck('id');
+        $packages = Package::query()->whereKey($packageIds)->orderBy('id')
+            ->when($lockForCheckout, fn ($query) => $query->lockForUpdate())->get()->keyBy('id');
+        $packageItems = PackageItem::query()->whereIn('package_id', $packageIds)->orderBy('id')
+            ->when($lockForCheckout, fn ($query) => $query->lockForUpdate())->get();
+        $productIds = collect($entries)->where('type', 'product')->pluck('id')
+            ->merge($packageItems->pluck('product_id'))->unique();
+        $products = Product::query()->with('images')->whereKey($productIds)->orderBy('id')
+            ->when($lockForCheckout, fn ($query) => $query->lockForUpdate())->get()->keyBy('id');
 
-            if ($purchasable === null) {
+        foreach ($packageItems as $packageItem) {
+            $packageItem->setRelation('product', $products->get($packageItem->product_id));
+        }
+
+        foreach ($packages as $package) {
+            $package->setRelation('items', $packageItems->where('package_id', $package->id)->values());
+        }
+
+        $rows = collect($entries)->map(function (array $entry) use ($products, $packages, $lockForCheckout) {
+            $purchasable = ($entry['type'] === 'package' ? $packages : $products)->get($entry['id']);
+
+            if ($purchasable === null || $purchasable->status !== ProductStatus::Active
+                || ($purchasable instanceof Package && $purchasable->items->contains(fn (PackageItem $item): bool => $item->product === null))) {
+                if ($lockForCheckout) {
+                    throw new InsufficientStockException(__('store.cart_unavailable_review'));
+                }
+
                 return null;
+            }
+
+            if ($lockForCheckout) {
+                $this->inventory->assertSufficientStock($purchasable, $entry['quantity']);
             }
 
             $available = $this->inventory->availableQuantity($purchasable);
@@ -103,6 +134,12 @@ class CartService
     public function add(Purchasable $purchasable, int $quantity = 1): void
     {
         $quantity = max(1, $quantity);
+        session()->forget('cart.review_prices');
+        $priceKey = 'cart.added_prices.'.$purchasable->cartTypeKey().':'.$purchasable->getKey();
+
+        if (! session()->has($priceKey)) {
+            session()->put($priceKey, $purchasable->displayPrice());
+        }
 
         $entry = ['type' => $purchasable->cartTypeKey(), 'id' => $purchasable->getKey()];
 
@@ -153,6 +190,14 @@ class CartService
 
     public function updateQuantity(string $type, int $id, int $quantity): void
     {
+        session()->forget('cart.review_prices');
+
+        if ($quantity <= 0) {
+            $this->remove($type, $id);
+
+            return;
+        }
+
         $purchasable = $this->resolve($type, $id);
 
         if (! $purchasable) {
@@ -190,6 +235,7 @@ class CartService
 
     public function remove(string $type, int $id): void
     {
+        session()->forget(['cart.added_prices.'.$type.':'.$id, 'cart.review_prices']);
         if ($this->isPersistent()) {
             $this->cart()->items()
                 ->where('cartable_type', $this->cartableTypeFor($type))
@@ -209,6 +255,7 @@ class CartService
 
     public function clear(): void
     {
+        session()->forget(['cart.added_prices', 'cart.review_prices']);
         if ($this->isPersistent()) {
             $this->cart()?->items()?->delete();
 
@@ -283,6 +330,28 @@ class CartService
                 ]);
             }
         }
+    }
+
+    /** @param Collection<int, CartItemValue> $items */
+    public function pricesNeedReview(Collection $items): bool
+    {
+        $prices = session('cart.review_prices', session('cart.added_prices', []));
+
+        foreach ($items as $item) {
+            if (($prices[$item->key()] ?? null) !== $item->unitPrice) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @param Collection<int, CartItemValue> $items */
+    public function rememberReviewedPrices(Collection $items): void
+    {
+        session()->put('cart.review_prices', $items->mapWithKeys(
+            fn (CartItemValue $item): array => [$item->key() => $item->unitPrice],
+        )->all());
     }
 
     private function resolve(string $type, int $id): ?Purchasable

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,6 +42,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('quote-submissions', fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
+
+        Product::updating(function (Product $product): void {
+            if ($product->isDirty(['price', 'sale_price'])) {
+                $product->pricing_revision = (string) Str::uuid();
+            }
+        });
 
         Gate::before(fn (User $user) => $user->isAdmin() ? true : null);
         Password::defaults(function (): Password {

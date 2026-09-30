@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Exceptions\CartEmptyException;
+use App\Exceptions\CartPriceChangedException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Order;
 use App\Models\Package;
@@ -29,19 +30,22 @@ class CheckoutService
      * @param  array{customer_name: string, phone: string, email: ?string, governorate: ?string, city: ?string, address_line: ?string, notes: ?string, payment_method: string}  $customerData
      *
      * @throws CartEmptyException
+     * @throws CartPriceChangedException
      * @throws InsufficientStockException
      */
     public function placeOrder(array $customerData): Order
     {
         return DB::transaction(function () use ($customerData) {
             /** @var Collection<int, CartItemValue> $cartItems */
-            $cartItems = $this->cart->items();
+            $cartItems = $this->cart->items(lockForCheckout: true);
 
             if ($cartItems->isEmpty()) {
                 throw new CartEmptyException;
             }
 
-            $this->ensureStockUnderLock($cartItems);
+            if ($this->cart->pricesNeedReview($cartItems)) {
+                throw new CartPriceChangedException;
+            }
 
             $subtotal = round($cartItems->sum(fn (CartItemValue $item) => (float) $item->lineTotal()), 2);
             $shippingFee = 0.0;
@@ -97,66 +101,6 @@ class CheckoutService
         }
 
         return $map;
-    }
-
-    /**
-     * Lock the physical product rows and verify they remain active.
-     *
-     * @param  Collection<int, CartItemValue>  $cartItems
-     *
-     * @throws InsufficientStockException
-     */
-    private function ensureStockUnderLock(Collection $cartItems): void
-    {
-        $productIds = collect($cartItems)->flatMap(function (CartItemValue $item) {
-            if ($item->type === 'product') {
-                return [$item->id];
-            }
-
-            return $item->model->items->pluck('product_id');
-        })->unique()->values()->all();
-
-        /** @var Collection<int, Product> $lockedProducts */
-        $lockedProducts = Product::query()
-            ->whereIn('id', $productIds)
-            ->lockForUpdate()
-            ->get()
-            ->keyBy('id');
-
-        foreach ($cartItems as $item) {
-            $isAvailable = $item->type === 'package'
-                ? $this->lockedPackageAvailability($item->model, $lockedProducts)
-                : ($lockedProducts->get($item->id)?->isActive() ?? false);
-
-            if (! $isAvailable) {
-                throw new InsufficientStockException(
-                    __('store.insufficient_stock_exception', [
-                        'name' => $item->name,
-                        'available' => 0,
-                    ]),
-                );
-            }
-        }
-    }
-
-    /**
-     * @param  Collection<int, Product>  $lockedProducts
-     */
-    private function lockedPackageAvailability(Package $package, Collection $lockedProducts): bool
-    {
-        if ($package->items->isEmpty()) {
-            return false;
-        }
-
-        foreach ($package->items as $packageItem) {
-            $product = $lockedProducts->get($packageItem->product_id);
-
-            if ($product === null || ! $product->isActive()) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function generateOrderNumber(): string
