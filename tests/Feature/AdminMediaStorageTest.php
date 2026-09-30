@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Package;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -61,5 +62,63 @@ class AdminMediaStorageTest extends TestCase
         $this->assertStringStartsWith('supabase/packages/', $newCover);
         Storage::disk('s3')->assertExists($newCover);
         Storage::disk('public')->assertMissing('packages/old.jpg');
+    }
+
+    public function test_category_and_package_uploads_use_supabase_and_keep_legacy_urls_readable(): void
+    {
+        Storage::fake('s3', ['url' => 'https://cdn.example.test']);
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+        $product = Product::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.categories.store'), [
+                'name_ar' => 'فئة اختبار',
+                'name_en' => 'Test Category',
+                'slug' => 'test-category',
+                'image' => UploadedFile::fake()->image('category.png'),
+            ])
+            ->assertRedirect(route('admin.categories.index'));
+
+        $category = Category::query()->where('slug', 'test-category')->firstOrFail();
+
+        $this->assertStringStartsWith('supabase/categories/', $category->image);
+        Storage::disk('s3')->assertExists($category->image);
+
+        $this->post(route('admin.packages.store'), [
+            'name_ar' => 'باقة اختبار',
+            'name_en' => 'Test Package',
+            'slug' => 'test-package',
+            'status' => 'active',
+            'use_component_pricing' => '0',
+            'base_price' => '1500.00',
+            'discount_amount' => '0',
+            'featured' => '0',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'cover_image' => UploadedFile::fake()->image('package.png'),
+        ])->assertRedirect();
+
+        $package = Package::query()->where('slug', 'test-package')->firstOrFail();
+
+        $this->assertStringStartsWith('supabase/packages/', $package->cover_image);
+        $this->assertSame(
+            'https://cdn.example.test/'.$package->cover_image,
+            $package->firstImageUrl(),
+        );
+        Storage::disk('s3')->assertExists($package->cover_image);
+
+        $legacyPath = 'categories/legacy.png';
+        Storage::disk('public')->put($legacyPath, 'legacy image');
+
+        $this->assertSame(
+            Storage::disk('public')->url($legacyPath),
+            media_url($legacyPath),
+        );
+
+        $this->get(route('admin.categories.edit', $category))
+            ->assertSee('https://cdn.example.test/'.$category->image);
     }
 }

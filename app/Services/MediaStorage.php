@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Filesystem\AwsS3V3Adapter;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -56,7 +57,13 @@ class MediaStorage
 
         $disk = Str::startsWith($path, self::STORAGE_PREFIX) ? 's3' : 'public';
 
-        return Storage::disk($disk)->url($path);
+        $filesystem = Storage::disk($disk);
+
+        if (! $filesystem instanceof FilesystemAdapter) {
+            throw new RuntimeException("The {$disk} filesystem does not support URL generation.");
+        }
+
+        return $filesystem->url($path);
     }
 
     public function delete(?string $path): void

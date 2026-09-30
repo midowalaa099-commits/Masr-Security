@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\MediaStorage;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
@@ -33,6 +35,7 @@ class BrandSettingsTest extends TestCase
 
     public function test_admin_can_upload_logo_hero_and_gallery_images(): void
     {
+        Storage::fake('public');
         Storage::fake('s3');
 
         $this->actingAs($this->admin())
@@ -56,10 +59,11 @@ class BrandSettingsTest extends TestCase
         $this->assertStringStartsWith('supabase/site/branding/', $logo);
         $this->assertIsString($hero);
         $this->assertStringStartsWith('supabase/site/hero/', $hero);
-        Storage::disk('s3')->assertExists([$logo, $hero]);
-        $this->assertNotEmpty(setting_array('gallery_images'));
-        $this->assertSame(2, count(setting_array('gallery_images')));
-        Storage::disk('s3')->assertExists(setting_array('gallery_images'));
+        Storage::disk('s3')->assertExists($logo);
+        Storage::disk('s3')->assertExists($hero);
+        $gallery = setting_array('gallery_images');
+        $this->assertCount(2, $gallery);
+        Storage::disk('s3')->assertExists($gallery);
     }
 
     public function test_admin_can_remove_uploaded_brand_images(): void
@@ -104,6 +108,7 @@ class BrandSettingsTest extends TestCase
 
     public function test_uploaded_brand_images_override_requested_removals_in_settings_and_audit(): void
     {
+        Storage::fake('public');
         Storage::fake('s3');
 
         $this->actingAs($this->admin())
@@ -150,6 +155,27 @@ class BrandSettingsTest extends TestCase
         Storage::disk('public')->put('site/hero/hero.png', 'hero');
         Storage::disk('public')->put('site/gallery/gallery.png', 'gallery');
         $existingFiles = Storage::disk('public')->allFiles();
+        $realMedia = app(MediaStorage::class);
+        $stagedPaths = [];
+        $cleanupAttempts = 0;
+
+        $media = $this->partialMock(MediaStorage::class);
+        $media->shouldReceive('store')->andReturnUsing(function (UploadedFile $file, string $directory) use ($realMedia, &$stagedPaths): string {
+            $path = $realMedia->store($file, $directory);
+            $stagedPaths[] = $path;
+
+            return $path;
+        });
+        $media->shouldReceive('delete')->andReturnUsing(function (string $path) use ($realMedia, &$stagedPaths, &$cleanupAttempts): void {
+            if ($path === ($stagedPaths[0] ?? null)) {
+                $cleanupAttempts++;
+
+                throw new RuntimeException('Object cleanup failed.');
+            }
+
+            $realMedia->delete($path);
+        });
+        Log::spy();
 
         $settings = $this->partialMock(SettingsService::class);
         $settings->shouldReceive('setMany')
@@ -159,6 +185,7 @@ class BrandSettingsTest extends TestCase
         $this->actingAs($this->admin());
         $this->withoutExceptionHandling();
         $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Settings could not be persisted.');
 
         try {
             $this->put(route('admin.settings.update'), [
@@ -176,8 +203,91 @@ class BrandSettingsTest extends TestCase
                 'site/gallery/gallery.png',
             ]);
             $this->assertSame($existingFiles, Storage::disk('public')->allFiles());
-            $this->assertSame([], Storage::disk('s3')->allFiles());
+            Storage::disk('s3')->assertExists($stagedPaths[0]);
+            foreach (array_slice($stagedPaths, 1) as $path) {
+                Storage::disk('s3')->assertMissing($path);
+            }
+            $this->assertSame(3, $cleanupAttempts);
+            Log::shouldHaveReceived('error')
+                ->once()
+                ->with('settings.media_delete_failed', \Mockery::on(
+                    static fn (array $context): bool => $context['path'] === $stagedPaths[0],
+                ));
         }
+    }
+
+    public function test_failed_old_media_deletion_is_reported_and_retried_without_failing_settings_update(): void
+    {
+        Storage::fake('public');
+        Storage::fake('s3');
+
+        $oldPaths = [
+            'supabase/site/branding/old-logo.png',
+            'supabase/site/hero/old-hero.png',
+            'supabase/site/gallery/old-gallery.png',
+        ];
+        app(SettingsService::class)->setMany([
+            'site_logo' => $oldPaths[0],
+            'hero_image' => $oldPaths[1],
+            'gallery_images' => json_encode([$oldPaths[2]]),
+        ]);
+
+        Storage::disk('s3')->put($oldPaths[0], 'logo');
+        Storage::disk('s3')->put($oldPaths[1], 'hero');
+        Storage::disk('s3')->put($oldPaths[2], 'gallery');
+
+        $realMedia = app(MediaStorage::class);
+        $failedDeleteAttempts = 0;
+        $media = $this->partialMock(MediaStorage::class);
+        $media->shouldReceive('store')->andReturnUsing(
+            fn (UploadedFile $file, string $directory): string => $realMedia->store($file, $directory),
+        );
+        $media->shouldReceive('delete')->andReturnUsing(function (string $path) use ($realMedia, $oldPaths, &$failedDeleteAttempts): void {
+            if ($path === $oldPaths[0]) {
+                $failedDeleteAttempts++;
+
+                throw new RuntimeException('Old logo deletion failed.');
+            }
+
+            $realMedia->delete($path);
+        });
+        Log::spy();
+
+        $this->actingAs($this->admin())
+            ->put(route('admin.settings.update'), [
+                'site_logo' => UploadedFile::fake()->image('new-logo.png'),
+                'hero_image' => UploadedFile::fake()->image('new-hero.png'),
+                'gallery_images' => [UploadedFile::fake()->image('new-gallery.png')],
+            ])
+            ->assertRedirect(route('admin.settings.edit'));
+
+        $this->assertSame(3, $failedDeleteAttempts);
+        Storage::disk('s3')->assertExists($oldPaths[0]);
+        Storage::disk('s3')->assertMissing([$oldPaths[1], $oldPaths[2]]);
+        Storage::disk('s3')->assertExists([
+            setting('site_logo'),
+            setting('hero_image'),
+            ...setting_array('gallery_images'),
+        ]);
+        Log::shouldHaveReceived('error')
+            ->once()
+            ->with('settings.media_delete_failed', \Mockery::on(
+                static fn (array $context): bool => $context['path'] === $oldPaths[0],
+            ));
+    }
+
+    public function test_supabase_brand_asset_paths_resolve_to_the_public_url(): void
+    {
+        Storage::fake('s3', ['url' => 'https://cdn.example.test']);
+
+        app(SettingsService::class)->setMany([
+            'site_logo' => 'supabase/site/branding/logo.png',
+            'hero_image' => 'supabase/site/hero/hero.png',
+        ]);
+
+        $this->get(route('home'))
+            ->assertSee('https://cdn.example.test/supabase/site/branding/logo.png')
+            ->assertSee('https://cdn.example.test/supabase/site/hero/hero.png');
     }
 
     public function test_brand_assets_render_on_the_storefront_homepage(): void
