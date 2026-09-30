@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Models\Order;
 use App\Services\AuditLogger;
 use App\Services\InventoryService;
+use App\Support\SearchPattern;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,9 +27,9 @@ class AdminOrderController extends Controller
             ->with('payments')
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('search'), fn ($q, $search) => $q->where(fn ($q2) => $q2
-                ->where('order_number', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('customer_name', 'like', "%{$search}%")))
+                ->whereLike('order_number', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('phone', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('customer_name', SearchPattern::contains($search), caseSensitive: false)))
             ->when($request->query('from'), fn ($q, $from) => $q->whereDate('created_at', '>=', $from))
             ->when($request->query('to'), fn ($q, $to) => $q->whereDate('created_at', '<=', $to))
             ->latest()

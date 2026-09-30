@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateQuoteStatusRequest;
 use App\Models\QuoteRequest;
 use App\Services\AuditLogger;
 use App\Services\SettingsService;
+use App\Support\SearchPattern;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -23,9 +24,9 @@ class AdminQuoteController extends Controller
         $quotes = QuoteRequest::query()
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('search'), fn ($q, $search) => $q->where(fn ($q2) => $q2
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('company', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")))
+                ->whereLike('name', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('company', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('phone', SearchPattern::contains($search), caseSensitive: false)))
             ->latest()
             ->paginate(15)
             ->withQueryString();

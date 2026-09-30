@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Services\AuditLogger;
 use App\Services\MediaStorage;
 use App\Services\UniqueSlugGenerator;
+use App\Support\SearchPattern;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -28,8 +29,8 @@ class AdminCategoryController extends Controller
             ->with('parent')
             ->when($request->has('search') && $request->query('search') !== '', function ($q) use ($request) {
                 $q->where(fn ($q2) => $q2
-                    ->where('name_en', 'like', '%'.$request->query('search').'%')
-                    ->orWhere('name_ar', 'like', '%'.$request->query('search').'%'));
+                    ->whereLike('name_en', SearchPattern::contains($request->query('search')), caseSensitive: false)
+                    ->orWhereLike('name_ar', SearchPattern::contains($request->query('search')), caseSensitive: false));
             })
             ->orderBy('sort_order')
             ->paginate(15)

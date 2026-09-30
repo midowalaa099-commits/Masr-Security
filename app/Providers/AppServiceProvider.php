@@ -17,9 +17,13 @@ use App\Policies\QuoteRequestPolicy;
 use App\Services\CatalogCategories;
 use App\Services\Payments\PaymobGateway;
 use App\Services\SettingsService;
+use App\Support\EscapedSQLiteGrammar;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Events\ConnectionEstablished;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -43,6 +47,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(ConnectionEstablished::class, function (ConnectionEstablished $event): void {
+            if ($event->connection instanceof SQLiteConnection) {
+                $event->connection->setQueryGrammar(new EscapedSQLiteGrammar($event->connection));
+            }
+        });
+
         RateLimiter::for('quote-submissions', fn (Request $request): Limit => Limit::perMinute(5)->by($request->ip()));
 
         foreach (['saved', 'deleted'] as $event) {

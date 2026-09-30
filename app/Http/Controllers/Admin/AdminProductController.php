@@ -15,6 +15,7 @@ use App\Models\ProductImage;
 use App\Services\AuditLogger;
 use App\Services\ProductImageStorage;
 use App\Services\UniqueSlugGenerator;
+use App\Support\SearchPattern;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,9 +35,9 @@ class AdminProductController extends Controller
         $products = Product::query()
             ->with(['category', 'images' => fn ($q) => $q->orderBy('sort_order')->limit(1)])
             ->when($request->query('search'), fn ($q, $search) => $q->where(fn ($q2) => $q2
-                ->where('name_en', 'like', "%{$search}%")
-                ->orWhere('name_ar', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%")))
+                ->whereLike('name_en', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('name_ar', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('sku', SearchPattern::contains($search), caseSensitive: false)))
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->query('category'), fn ($q, $cat) => $q->where('category_id', (int) $cat))
             ->latest()

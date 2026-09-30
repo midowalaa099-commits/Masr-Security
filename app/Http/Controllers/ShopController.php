@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Services\CatalogCategories;
 use App\Support\CatalogSection;
+use App\Support\SearchPattern;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -46,11 +47,12 @@ class ShopController extends Controller
         }
 
         if ($search = trim((string) $request->query('q'))) {
+            $search = SearchPattern::contains($search);
             $query->where(function ($q) use ($search) {
-                $q->where('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('model_number', 'like', "%{$search}%");
+                $q->whereLike('name_en', $search, caseSensitive: false)
+                    ->orWhereLike('name_ar', $search, caseSensitive: false)
+                    ->orWhereLike('sku', $search, caseSensitive: false)
+                    ->orWhereLike('model_number', $search, caseSensitive: false);
             });
         }
 

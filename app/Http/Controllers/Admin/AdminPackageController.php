@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Services\AuditLogger;
 use App\Services\MediaStorage;
 use App\Services\UniqueSlugGenerator;
+use App\Support\SearchPattern;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,8 +31,8 @@ class AdminPackageController extends Controller
             ->with(['items.product'])
             ->withCount('items')
             ->when($request->query('search'), fn ($q, $search) => $q->where(fn ($q2) => $q2
-                ->where('name_en', 'like', "%{$search}%")
-                ->orWhere('name_ar', 'like', "%{$search}%")))
+                ->whereLike('name_en', SearchPattern::contains($search), caseSensitive: false)
+                ->orWhereLike('name_ar', SearchPattern::contains($search), caseSensitive: false)))
             ->latest()
             ->paginate(15)
             ->withQueryString();
