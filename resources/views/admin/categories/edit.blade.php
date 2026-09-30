@@ -45,7 +45,7 @@
             <x-input-label for="image" :value="__('admin.image')" />
             <div class="mt-1 flex items-center gap-4">
                 @if ($category->image)
-                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->image) }}" alt="{{ $category->trans('name') }}" class="h-16 w-16 rounded-xl border border-slate-200 object-cover">
+                    <img src="{{ media_url($category->image) }}" alt="{{ $category->trans('name') }}" class="h-16 w-16 rounded-xl border border-slate-200 object-cover">
                 @endif
                 <input id="image" type="file" name="image" accept="image/*"
                     class="block w-full rounded-lg border border-slate-300 text-sm text-slate-500 file:mr-3 file:rounded-l-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700" />

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -17,6 +16,7 @@ class ProductImage extends Model
     protected $fillable = [
         'product_id',
         'path',
+        'storage_key',
         'sort_order',
     ];
 
@@ -36,13 +36,15 @@ class ProductImage extends Model
             return null;
         }
 
-        return $this->path === 'database'
-            ? route('product-images.show', $this)
-            : Storage::disk('public')->url($this->path);
+        if ($this->storage_key !== null) {
+            return media_url($this->storage_key);
+        }
+
+        return $this->path === 'database' ? route('product-images.show', $this) : media_url($this->path);
     }
 
     public function getPathFilenameAttribute(): string
     {
-        return basename((string) $this->path);
+        return basename((string) ($this->storage_key ?? $this->path));
     }
 }

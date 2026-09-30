@@ -7,15 +7,18 @@ use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Services\AuditLogger;
+use App\Services\MediaStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly MediaStorage $media,
+    ) {}
 
     public function index(Request $request)
     {
@@ -48,7 +51,7 @@ class AdminCategoryController extends Controller
         $data = $request->safe()->except(['image']);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = $this->media->store($request->file('image'), 'categories');
         }
 
         $slug = $data['slug'] ?? null;
@@ -81,23 +84,25 @@ class AdminCategoryController extends Controller
         $old = $category->only(['name_ar', 'name_en', 'slug', 'parent_id', 'is_active', 'sort_order']);
 
         $data = $request->safe()->except(['image', 'remove_image']);
+        $replacedImage = null;
 
         if ($request->hasFile('image')) {
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $replacedImage = $category->image;
+            $data['image'] = $this->media->store($request->file('image'), 'categories');
         }
 
-        if ($request->boolean('remove_image') && $category->image) {
-            Storage::disk('public')->delete($category->image);
+        if (! $request->hasFile('image') && $request->boolean('remove_image') && $category->image) {
+            $replacedImage = $category->image;
             $data['image'] = null;
         }
 
         $data['is_active'] = $request->boolean('is_active');
 
         $category->update($data);
+
+        if ($replacedImage !== null && $replacedImage !== $category->image) {
+            $this->media->delete($replacedImage);
+        }
 
         Cache::forget('storefront.nav.category_ids');
 
@@ -111,7 +116,7 @@ class AdminCategoryController extends Controller
         $this->audit->log('category_deleted', $category, oldValues: $category->only(['name_ar', 'name_en', 'slug']));
 
         if ($category->image) {
-            Storage::disk('public')->delete($category->image);
+            $this->media->delete($category->image);
         }
 
         Category::query()->where('parent_id', $category->id)->update(['parent_id' => null]);

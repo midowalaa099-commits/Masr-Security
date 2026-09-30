@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SettingsUpdateRequest;
 use App\Services\AuditLogger;
+use App\Services\MediaStorage;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use RuntimeException;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class AdminSettingsController extends Controller
@@ -40,6 +40,7 @@ class AdminSettingsController extends Controller
     public function __construct(
         private readonly SettingsService $settings,
         private readonly AuditLogger $audit,
+        private readonly MediaStorage $media,
     ) {}
 
     public function edit()
@@ -102,11 +103,7 @@ class AdminSettingsController extends Controller
         ] as $key => $directory) {
             if ($request->hasFile($key)) {
                 $replacedPaths[] = (string) $this->settings->get($key, '');
-                $path = $request->file($key)->store($directory, 'public');
-
-                if ($path === false) {
-                    throw new RuntimeException("Unable to store {$key}.");
-                }
+                $path = $this->media->store($request->file($key), $directory);
 
                 $stagedPaths[] = $path;
                 $media[$key] = $path;
@@ -121,11 +118,7 @@ class AdminSettingsController extends Controller
             $paths = [];
 
             foreach ($request->file('gallery_images') as $image) {
-                $path = $image->store('site/gallery', 'public');
-
-                if ($path === false) {
-                    throw new RuntimeException('Unable to store a gallery image.');
-                }
+                $path = $this->media->store($image, 'site/gallery');
 
                 $stagedPaths[] = $path;
                 $paths[] = $path;
@@ -167,8 +160,17 @@ class AdminSettingsController extends Controller
 
     private function deleteFile(string $path): void
     {
-        if ($path !== '') {
-            Storage::disk('public')->delete($path);
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            retry([100, 500], fn () => $this->media->delete($path));
+        } catch (Throwable $exception) {
+            Log::error('settings.media_delete_failed', [
+                'path' => $path,
+                'exception' => $exception,
+            ]);
         }
     }
 }

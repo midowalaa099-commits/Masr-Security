@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\ProductImageStorage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProductImageTest extends TestCase
@@ -33,6 +34,7 @@ class ProductImageTest extends TestCase
 
     public function test_admin_can_upload_and_serve_an_image_for_an_existing_product(): void
     {
+        Storage::fake('s3');
         $admin = User::factory()->admin()->create();
         $product = Product::factory()->create();
         $file = UploadedFile::fake()->image('camera.jpg', 640, 480);
@@ -43,9 +45,10 @@ class ProductImageTest extends TestCase
 
         $image = $product->images()->firstOrFail();
 
-        $this->assertSame('database', $image->path);
-        $this->assertNotNull($image->content);
-        $this->get($image->url)->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+        $this->assertSame('supabase', $image->path);
+        $this->assertNull($image->content);
+        $this->assertStringStartsWith('supabase/products/', $image->storage_key);
+        Storage::disk('s3')->assertExists($image->storage_key);
     }
 
     public function test_serving_a_product_image_does_not_create_a_customer_cart(): void
@@ -66,8 +69,29 @@ class ProductImageTest extends TestCase
         $this->assertDatabaseMissing('carts', ['user_id' => $customer->id]);
     }
 
+    public function test_supabase_product_image_uses_the_public_bucket_url(): void
+    {
+        config()->set('filesystems.disks.s3.url', 'https://example.supabase.co/storage/v1/object/public/masr-media');
+        config()->set('filesystems.disks.s3.region', 'eu-central-1');
+        config()->set('filesystems.disks.s3.bucket', 'masr-media');
+        Storage::forgetDisk('s3');
+
+        $product = Product::factory()->create();
+        $image = $product->images()->create([
+            'path' => 'supabase',
+            'storage_key' => 'supabase/products/camera.jpg',
+            'sort_order' => 0,
+        ]);
+
+        $this->assertSame(
+            'https://example.supabase.co/storage/v1/object/public/masr-media/supabase/products/camera.jpg',
+            $image->url,
+        );
+    }
+
     public function test_admin_can_create_a_product_with_an_image_and_optional_stock(): void
     {
+        Storage::fake('s3');
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->post(route('admin.products.store'), [
@@ -86,12 +110,14 @@ class ProductImageTest extends TestCase
 
         $this->assertNull($product->stock_quantity);
         $this->assertSame('camera-new-1', $product->slug);
-        $this->assertSame('database', $product->images()->firstOrFail()->path);
-        $this->get($product->firstImageUrl())->assertOk()->assertHeader('Content-Type', 'image/png');
+        $image = $product->images()->firstOrFail();
+        $this->assertSame('supabase', $image->path);
+        Storage::disk('s3')->assertExists($image->storage_key);
     }
 
     public function test_new_images_follow_the_highest_existing_sort_order(): void
     {
+        Storage::fake('s3');
         $product = Product::factory()->create();
         $product->images()->create(['path' => 'products/first.jpg', 'sort_order' => 0]);
         $product->images()->create(['path' => 'products/third.jpg', 'sort_order' => 2]);

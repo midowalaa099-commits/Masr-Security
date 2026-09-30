@@ -60,7 +60,7 @@
                     <x-input-label for="cover_image" :value="__('admin.cover_image')" />
                     <div class="mt-1 flex items-center gap-4">
                         @if ($package->cover_image)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($package->cover_image) }}" alt="{{ $package->trans('name') }}" class="h-16 w-16 rounded-xl border border-slate-200 object-cover">
+                            <img src="{{ media_url($package->cover_image) }}" alt="{{ $package->trans('name') }}" class="h-16 w-16 rounded-xl border border-slate-200 object-cover">
                         @endif
                         <input id="cover_image" type="file" name="cover_image" accept="image/*"
                             class="block w-full rounded-lg border border-slate-300 text-sm text-slate-500 file:mr-3 file:rounded-l-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700" />

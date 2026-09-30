@@ -33,7 +33,7 @@ class BrandSettingsTest extends TestCase
 
     public function test_admin_can_upload_logo_hero_and_gallery_images(): void
     {
-        Storage::fake('public');
+        Storage::fake('s3');
 
         $this->actingAs($this->admin())
             ->put(route('admin.settings.update'), [
@@ -53,13 +53,13 @@ class BrandSettingsTest extends TestCase
         $hero = setting('hero_image');
 
         $this->assertIsString($logo);
-        $this->assertStringStartsWith('site/branding/', $logo);
+        $this->assertStringStartsWith('supabase/site/branding/', $logo);
         $this->assertIsString($hero);
-        $this->assertStringStartsWith('site/hero/', $hero);
-        $this->assertTrue(Storage::disk('public')->exists($logo));
-        $this->assertTrue(Storage::disk('public')->exists($hero));
+        $this->assertStringStartsWith('supabase/site/hero/', $hero);
+        Storage::disk('s3')->assertExists([$logo, $hero]);
         $this->assertNotEmpty(setting_array('gallery_images'));
         $this->assertSame(2, count(setting_array('gallery_images')));
+        Storage::disk('s3')->assertExists(setting_array('gallery_images'));
     }
 
     public function test_admin_can_remove_uploaded_brand_images(): void
@@ -104,7 +104,7 @@ class BrandSettingsTest extends TestCase
 
     public function test_uploaded_brand_images_override_requested_removals_in_settings_and_audit(): void
     {
-        Storage::fake('public');
+        Storage::fake('s3');
 
         $this->actingAs($this->admin())
             ->put(route('admin.settings.update'), [
@@ -121,7 +121,7 @@ class BrandSettingsTest extends TestCase
         $this->assertNotEmpty(setting('hero_image'));
         $this->assertCount(1, setting_array('gallery_images'));
 
-        Storage::disk('public')->assertExists([
+        Storage::disk('s3')->assertExists([
             setting('site_logo'),
             setting('hero_image'),
             ...setting_array('gallery_images'),
@@ -138,6 +138,7 @@ class BrandSettingsTest extends TestCase
     public function test_failed_settings_persistence_keeps_existing_brand_files_and_removes_staged_uploads(): void
     {
         Storage::fake('public');
+        Storage::fake('s3');
 
         app(SettingsService::class)->setMany([
             'site_logo' => 'site/branding/logo.png',
@@ -175,6 +176,7 @@ class BrandSettingsTest extends TestCase
                 'site/gallery/gallery.png',
             ]);
             $this->assertSame($existingFiles, Storage::disk('public')->allFiles());
+            $this->assertSame([], Storage::disk('s3')->allFiles());
         }
     }
 

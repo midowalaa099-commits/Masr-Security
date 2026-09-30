@@ -5,12 +5,13 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use RuntimeException;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProductImageStorage
 {
+    public function __construct(private readonly MediaStorage $storage) {}
+
     /**
      * @param  array<int, UploadedFile>  $files
      */
@@ -25,31 +26,34 @@ class ProductImageStorage
 
     public function store(Product $product, UploadedFile $file, ?int $sortOrder = null): ProductImage
     {
-        $contents = $file->get();
+        $storageKey = $this->storage->store($file, 'products');
 
-        if ($contents === false || $contents === '') {
-            throw new RuntimeException('The product image could not be read.');
-        }
-
-        return DB::transaction(function () use ($product, $file, $contents, $sortOrder): ProductImage {
-            $image = $product->images()->create([
-                'path' => 'database',
+        try {
+            return $product->images()->create([
+                'path' => 'supabase',
+                'storage_key' => $storageKey,
                 'sort_order' => $sortOrder ?? $this->nextSortOrder($product),
             ]);
+        } catch (Throwable $persistenceException) {
+            try {
+                $this->storage->delete($storageKey);
+            } catch (Throwable $cleanupException) {
+                Log::error('product_image.upload_cleanup_failed', [
+                    'storage_key' => $storageKey,
+                    'exception' => $cleanupException,
+                ]);
+            }
 
-            $image->content()->create([
-                'mime_type' => (string) $file->getMimeType(),
-                'contents' => base64_encode($contents),
-            ]);
-
-            return $image;
-        });
+            throw $persistenceException;
+        }
     }
 
     public function delete(ProductImage $image): void
     {
-        if ($image->path !== 'database') {
-            Storage::disk('public')->delete($image->path);
+        if ($image->storage_key !== null) {
+            $this->storage->delete($image->storage_key);
+        } elseif ($image->path !== 'database') {
+            $this->storage->delete($image->path);
         }
 
         $image->delete();

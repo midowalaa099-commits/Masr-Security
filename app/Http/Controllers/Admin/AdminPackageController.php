@@ -10,15 +10,18 @@ use App\Models\OrderItem;
 use App\Models\Package;
 use App\Models\Product;
 use App\Services\AuditLogger;
+use App\Services\MediaStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminPackageController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly MediaStorage $media,
+    ) {}
 
     public function index(Request $request)
     {
@@ -54,7 +57,7 @@ class AdminPackageController extends Controller
         $data['featured'] = $request->boolean('featured');
 
         if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $request->file('cover_image')->store('packages', 'public');
+            $data['cover_image'] = $this->media->store($request->file('cover_image'), 'packages');
         }
 
         $package = Package::create($data);
@@ -94,21 +97,23 @@ class AdminPackageController extends Controller
         $data['slug'] = $data['slug'] ?: $this->uniqueSlug($data['name_en'], $package);
         $data['use_component_pricing'] = $request->boolean('use_component_pricing');
         $data['featured'] = $request->boolean('featured');
+        $replacedCover = null;
 
         if ($request->hasFile('cover_image')) {
-            if ($package->cover_image) {
-                Storage::disk('public')->delete($package->cover_image);
-            }
-
-            $data['cover_image'] = $request->file('cover_image')->store('packages', 'public');
+            $replacedCover = $package->cover_image;
+            $data['cover_image'] = $this->media->store($request->file('cover_image'), 'packages');
         }
 
-        if ($request->boolean('remove_cover') && $package->cover_image) {
-            Storage::disk('public')->delete($package->cover_image);
+        if (! $request->hasFile('cover_image') && $request->boolean('remove_cover') && $package->cover_image) {
+            $replacedCover = $package->cover_image;
             $data['cover_image'] = null;
         }
 
         $package->update($data);
+
+        if ($replacedCover !== null && $replacedCover !== $package->cover_image) {
+            $this->media->delete($replacedCover);
+        }
 
         if ($request->has('items')) {
             $this->syncItems($package, $request->input('items', []));
@@ -133,7 +138,7 @@ class AdminPackageController extends Controller
         $this->audit->log('package_deleted', $package, oldValues: $package->only(['name_ar', 'name_en', 'slug']));
 
         if ($package->cover_image) {
-            Storage::disk('public')->delete($package->cover_image);
+            $this->media->delete($package->cover_image);
         }
 
         $package->delete();

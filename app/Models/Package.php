@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Package extends Model implements Purchasable
 {
@@ -143,7 +142,7 @@ class Package extends Model implements Purchasable
     public function firstImageUrl(): ?string
     {
         if ($this->cover_image) {
-            return Storage::disk('public')->url($this->cover_image);
+            return media_url($this->cover_image);
         }
 
         $item = $this->items->first();

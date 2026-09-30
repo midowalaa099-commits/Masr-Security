@@ -1,8 +1,7 @@
 <?php
 
+use App\Services\MediaStorage;
 use App\Services\SettingsService;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 if (! function_exists('money')) {
     /**
@@ -58,14 +57,6 @@ if (! function_exists('media_url')) {
      */
     function media_url(?string $path): string
     {
-        if (blank($path)) {
-            return '';
-        }
-
-        if (Str::startsWith($path, ['http://', 'https://', '/'])) {
-            return $path;
-        }
-
-        return Storage::disk('public')->url($path);
+        return app(MediaStorage::class)->url($path);
     }
 }
