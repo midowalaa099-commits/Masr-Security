@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Small settings store backed by the settings table and a long lived cache.
@@ -55,12 +56,15 @@ class SettingsService
      */
     public function setMany(array $values): void
     {
-        foreach ($values as $key => $value) {
-            Setting::query()->updateOrCreate(
-                ['key' => $key],
-                ['value' => $value === null ? null : (string) $value],
-            );
+        if ($values === []) {
+            return;
         }
+
+        $rows = [];
+        foreach ($values as $key => $value) {
+            $rows[] = ['key' => $key, 'value' => $value === null ? null : (string) $value];
+        }
+        Setting::query()->upsert($rows, ['key'], ['value']);
 
         $this->flushCache();
     }
@@ -68,5 +72,6 @@ class SettingsService
     public function flushCache(): void
     {
         Cache::memo()->forget(self::CACHE_KEY);
+        DB::afterCommit(fn () => Cache::memo()->forget(self::CACHE_KEY));
     }
 }

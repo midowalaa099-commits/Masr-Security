@@ -3,11 +3,6 @@
 
     @php
         $statuses = \App\Enums\ProductStatus::cases();
-        $productOptions = $products->map(fn ($p) => [
-            'id' => $p->id,
-            'name' => $p->name_en,
-            'price' => $p->displayPrice(),
-        ]);
         $existingItems = $package->items->map(fn ($item) => [
             'product_id' => $item->product_id,
             'quantity' => $item->quantity,
@@ -118,60 +113,34 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" x-data="packageEditor(@js(['products' => $productOptions, 'items' => array_values((array) old('items', $existingItems->all())), 'searchUrl' => route('admin.products.options'), 'activeOnly' => true, 'calculateUrl' => route('admin.packages.calculate'), 'csrf' => csrf_token(), 'maxItems' => \App\Services\PackageItemsValidator::MAX_ITEMS]))">
             <div class="flex items-center justify-between">
                 <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('admin.package_items') }}</h2>
-                <span class="text-sm font-bold text-brand-700">{{ __('admin.package_total') }}: <span id="package-total">—</span></span>
+                <span class="text-sm font-bold text-brand-700">{{ __('admin.package_total') }}: <span x-text="total" aria-live="polite">—</span></span>
             </div>
 
-            <div x-data="{
-                products: @json($productOptions),
-                items: @json($existingItems->all()),
-                add() {
-                    if (! this.products.length) return;
-                    this.items.push({ product_id: '', quantity: 1 });
-                },
-                remove(index) { this.items.splice(index, 1); },
-                productPrice(id) { return Number(this.products.find((p) => String(p.id) === String(id))?.price ?? 0); },
-                async recalculate() {
-                    const payload = this.items
-                        .filter((row) => row.product_id)
-                        .map((row) => ({ product_id: Number(row.product_id), quantity: Number(row.quantity) || 1 }));
-                    if (! payload.length) { document.getElementById('package-total').textContent = '—'; return; }
-                    try {
-                        const res = await fetch('{{ route('admin.packages.calculate') }}', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                            body: JSON.stringify({ items: payload }),
-                        });
-                        const data = await res.json();
-                        if (res.ok && data.formatted) document.getElementById('package-total').textContent = data.formatted;
-                    } catch (e) {}
-                },
-                init() {
-                    this.$watch('items', () => this.recalculate());
-                    this.recalculate();
-                },
-            }" class="mt-4">
+            <div class="mt-4">
+                <x-admin.catalog-search />
+                <p x-cloak x-show="calculationError" role="alert" class="mb-3 text-sm text-rose-700">{{ __('admin.catalog_error') }}</p>
                 <template x-for="(item, index) in items" :key="index">
                     <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-[1.5fr_1fr_auto_auto]">
-                        <select x-model="item.product_id" :name="`items[${index}][product_id]`" x-on:change="recalculate()"
+                        <select x-model="item.product_id" :name="`items[${index}][product_id]`" aria-label="{{ __('admin.select_product') }}"
                             class="rounded-lg border-slate-300 px-3 py-2 text-sm">
                             <option value="">— {{ __('admin.select_product') }} —</option>
                             <template x-for="product in products" :key="product.id">
-                                <option :value="product.id" x-text="product.name + ' (' + product.price + ')'"></option>
+                                <option :value="product.id" x-text="product.name + ' · ' + product.sku + ' (' + product.price + ')'"></option>
                             </template>
                         </select>
-                        <input type="number" min="1" x-model.number="item.quantity" :name="`items[${index}][quantity]`" x-on:input="recalculate()"
+                        <input type="number" min="1" max="9999" aria-label="{{ __('store.quantity') }}" x-model.number="item.quantity" :name="`items[${index}][quantity]`"
                             class="rounded-lg border-slate-300 px-3 py-2 text-sm">
-                        <span class="self-center text-sm font-semibold text-slate-500" x-html="item.product_id ? (productPrice(item.product_id) * (item.quantity || 1)).toFixed(2) + ' ' + '{{ __('store.currency_egp') }}' : ''"></span>
+                        <span class="self-center text-sm font-semibold text-slate-500" x-text="lineTotals[index] ?? ''"></span>
                         <button type="button" x-on:click="remove(index)" class="rounded-lg border border-slate-200 px-3 py-2 text-rose-500 hover:bg-rose-50">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
                 </template>
                 <div x-show="!items.length" class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">{{ __('admin.no_items') }}</div>
-                <button type="button" x-on:click="add()"
+                <button type="button" x-on:click="add()" :disabled="items.length >= {{ \App\Services\PackageItemsValidator::MAX_ITEMS }}"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-bold text-brand-700 hover:bg-brand-100">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     {{ __('admin.add_item') }}

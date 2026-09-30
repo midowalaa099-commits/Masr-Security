@@ -60,6 +60,28 @@ class CartTest extends TestCase
             ->assertSee('2,000.00');
     }
 
+    public function test_adding_a_product_again_refreshes_its_session_price_baseline(): void
+    {
+        $product = Product::factory()->create(['price' => 100]);
+
+        $this->post(route('cart.add'), [
+            'type' => 'product',
+            'cartable' => $product->id,
+            'quantity' => 1,
+        ])->assertRedirect(route('cart.index'));
+
+        $product->update(['price' => 150]);
+
+        $this->post(route('cart.add'), [
+            'type' => 'product',
+            'cartable' => $product->id,
+            'quantity' => 1,
+        ])->assertRedirect(route('cart.index'));
+
+        $this->assertSame('150.00', session("cart.added_prices.product:{$product->id}"));
+        $this->assertFalse(app(CartService::class)->pricesNeedReview(app(CartService::class)->items()));
+    }
+
     public function test_guest_can_order_more_than_the_private_stock_count(): void
     {
         $product = Product::factory()->create(['price' => 1000, 'stock_quantity' => 10]);

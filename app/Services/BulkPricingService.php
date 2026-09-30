@@ -29,6 +29,7 @@ class BulkPricingService
                 'selected' => $query->whereIn('id', $options['product_ids']),
                 default => $query,
             };
+            $rows = [];
             foreach ($query->lazyById(200) as $product) {
                 $before = $this->snapshot($product);
                 $after = ['price' => $product->price, 'sale_price' => $product->sale_price];
@@ -43,11 +44,18 @@ class BulkPricingService
                 if ($reason === null && $after['price'] === $before['price'] && $after['sale_price'] === $before['sale_price']) {
                     $reason = 'unchanged';
                 }
-                DB::table('bulk_price_change_items')->insert([
+                $rows[] = [
                     'bulk_price_change_id' => $batchId, 'product_id' => $product->id, 'sku' => $product->sku,
                     'before' => json_encode($before, JSON_THROW_ON_ERROR), 'after' => json_encode($after, JSON_THROW_ON_ERROR),
                     'status' => $reason === null ? 'ready' : 'skipped', 'reason' => $reason,
-                ]);
+                ];
+                if (count($rows) === 200) {
+                    DB::table('bulk_price_change_items')->insert($rows);
+                    $rows = [];
+                }
+            }
+            if ($rows !== []) {
+                DB::table('bulk_price_change_items')->insert($rows);
             }
             $this->audit->log('bulk_pricing_previewed', newValues: $options, entityType: 'bulk_price_change', entityId: $batchId);
 
@@ -55,12 +63,12 @@ class BulkPricingService
         });
     }
 
-    public function apply(int $batchId, int $userId, string $token): void
+    public function apply(int $batchId, int $userId, string $token): bool
     {
-        DB::transaction(function () use ($batchId, $userId, $token): void {
+        return DB::transaction(function () use ($batchId, $userId, $token): bool {
             $batch = $this->lockedBatch($batchId, $userId, $token);
             if ($batch->status !== 'preview') {
-                return;
+                return false;
             }
             abort_if(now()->greaterThan($batch->expires_at), 409, __('pricing.expired'));
             foreach ($this->items($batchId)->where('status', 'ready')->lazyById(200) as $item) {
@@ -80,6 +88,8 @@ class BulkPricingService
                 'status' => 'applied', 'applied_at' => now(), 'updated_at' => now(),
             ]);
             $this->audit->log('bulk_pricing_completed', newValues: ['batch_id' => $batchId], entityType: 'bulk_price_change', entityId: $batchId);
+
+            return true;
         }, 3);
     }
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminPackageController;
 use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminProductBrandController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProductLookupController;
 use App\Http\Controllers\Admin\AdminQuoteController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\CartController;
@@ -141,6 +142,7 @@ Route::prefix('admin')
         Route::post('pricing/{batch}/undo', [AdminBulkPricingController::class, 'undo'])->whereNumber('batch')->name('pricing.undo');
 
         Route::resource('products', AdminProductController::class);
+        Route::get('product-options', AdminProductLookupController::class)->name('products.options');
         Route::post('products/{product}/images', [AdminProductController::class, 'storeImage'])->name('products.images.store');
         Route::delete('products/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::post('products/images/reorder', [AdminProductController::class, 'reorderImages'])->name('products.images.reorder');

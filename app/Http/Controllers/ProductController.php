@@ -16,7 +16,7 @@ class ProductController extends Controller
             ->active()
             ->where('id', '!=', $product->id)
             ->where('category_id', $product->category_id)
-            ->with(['images'])
+            ->with(['images', 'category'])
             ->latest()
             ->limit(4)
             ->get();

@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'catalog_search' => 'Search products by name or SKU',
+    'catalog_loading' => 'Loading products…',
+    'catalog_error' => 'Could not load the result. Please try again.',
+    'catalog_previous' => 'Previous',
+    'catalog_next' => 'Next',
     'price_includes_shipping' => 'Enter the final customer price, including delivery. Checkout adds no shipping fee.',
     'optional_internal_stock' => 'Optional internal count. Leave blank if untracked; customers can still order when this reaches zero.',
     'dashboard' => 'Dashboard',

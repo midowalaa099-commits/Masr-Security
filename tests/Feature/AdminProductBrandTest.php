@@ -50,6 +50,19 @@ class AdminProductBrandTest extends TestCase
         $this->assertDatabaseCount('product_brands', 3);
     }
 
+    public function test_admin_cannot_add_a_brand_that_differs_only_by_letter_case(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->from(route('admin.brands.index'))
+            ->post(route('admin.brands.store'), ['name' => 'hIKVISION'])
+            ->assertRedirect(route('admin.brands.index'))
+            ->assertSessionHasErrors('name');
+
+        $this->assertDatabaseCount('product_brands', 3);
+    }
+
     public function test_admin_cannot_remove_a_brand_assigned_to_a_product(): void
     {
         $admin = User::factory()->admin()->create();
@@ -148,5 +161,13 @@ class AdminProductBrandTest extends TestCase
             ->get(route('admin.products.edit', $product))
             ->assertSee('value="Legacy Brand"', false)
             ->assertSee(__('admin.brand_existing'));
+
+        $this->get(route('admin.products.create'))
+            ->assertSee('id="brand-0"', false)
+            ->assertSee('id="brand-1"', false)
+            ->assertSee('id="brand-2"', false)
+            ->assertSee('value="Hikvision"', false)
+            ->assertSee('value="HiLook"', false)
+            ->assertSee('value="EZVIZ"', false);
     }
 }

@@ -19,7 +19,7 @@
                         <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-brand-100">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.951 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
                         </span>
-                        <p class="mt-4 text-2xl font-black tabular-nums">{{ number_format($products->count()) }}</p>
+                        <p class="mt-4 text-2xl font-black tabular-nums">{{ number_format($productCount) }}</p>
                         <p class="mt-1 text-xs font-medium text-brand-100/75">{{ __('pricing.catalog_products') }}</p>
                     </div>
                     <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
@@ -113,18 +113,20 @@
                         </label>
                     </div>
 
-                    <fieldset x-cloak x-show="scope === 'selected'" class="grid gap-3">
+                    <fieldset x-cloak x-show="scope === 'selected'" class="grid gap-3" x-data="productCatalog(@js(['products' => $productOptions, 'selectedIds' => array_values((array) old('product_ids', [])), 'searchUrl' => route('admin.products.options'), 'activeOnly' => false]))">
                         <legend class="mb-3 text-sm font-bold text-slate-700">{{ __('pricing.selected') }}</legend>
+                        <x-admin.catalog-search />
+                        <template x-for="id in selectedIds" :key="id"><input type="hidden" name="product_ids[]" :value="id"></template>
                         <div class="grid max-h-72 gap-1 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-2 sm:grid-cols-2">
-                            @foreach ($products as $product)
+                            <template x-for="product in products" :key="product.id">
                                 <label class="flex min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white hover:shadow-sm">
-                                    <input type="checkbox" name="product_ids[]" value="{{ $product->id }}" @checked(in_array($product->id, old('product_ids', []))) class="size-4 shrink-0 rounded border-slate-300 text-brand-700 focus:ring-brand-500/20">
+                                    <input type="checkbox" x-model="selectedIds" :value="String(product.id)" class="size-4 shrink-0 rounded border-slate-300 text-brand-700 focus:ring-brand-500/20">
                                     <span class="min-w-0">
-                                        <span class="block truncate text-sm font-semibold text-slate-700">{{ $product->trans('name') }}</span>
-                                        <span class="mt-0.5 block truncate font-mono text-[11px] text-slate-400" dir="ltr">{{ $product->sku }}</span>
+                                        <span class="block truncate text-sm font-semibold text-slate-700" x-text="product.name"></span>
+                                        <span class="mt-0.5 block truncate font-mono text-[11px] text-slate-400" dir="ltr" x-text="product.sku"></span>
                                     </span>
                                 </label>
-                            @endforeach
+                            </template>
                         </div>
                         <p class="text-xs leading-5 text-slate-500">{{ __('pricing.selection_help') }}</p>
                     </fieldset>

@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\ProductBrand;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreProductBrandRequest extends FormRequest
 {
@@ -15,7 +16,21 @@ class StoreProductBrandRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', Rule::unique('product_brands', 'name')],
+            'name' => [
+                'bail',
+                'required',
+                'string',
+                'max:100',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $normalizedName = mb_strtolower((string) $value);
+
+                    if (ProductBrand::query()->pluck('name')->contains(
+                        fn (string $name): bool => mb_strtolower($name) === $normalizedName,
+                    )) {
+                        $fail(__('validation.unique', ['attribute' => $attribute]));
+                    }
+                },
+            ],
         ];
     }
 

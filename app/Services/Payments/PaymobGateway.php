@@ -11,6 +11,8 @@ use App\Exceptions\PaymentNotFoundException;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentCallbackResult;
+use Brick\Math\BigDecimal;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -77,11 +79,14 @@ class PaymobGateway implements PaymentGatewayInterface
         }
 
         $order = $payment->order;
-        $amountCents = (int) round(((float) $payment->amount) * 100);
+        if ($order === null) {
+            throw new PaymentGatewayException(__('payments.gateway_unavailable'));
+        }
+        $amountCents = BigDecimal::of($payment->amount)->multipliedBy(100)->toInt();
 
         $items = $order->items->map(fn ($item) => [
             'name' => mb_substr($item->name_snapshot, 0, 255),
-            'amount_cents' => (int) round(((float) $item->line_total) * 100),
+            'amount' => BigDecimal::of($item->line_total)->multipliedBy(100)->toInt(),
             'description' => $item->sku_snapshot ?? $item->name_snapshot,
             'quantity' => $item->quantity,
         ])->all();
@@ -102,10 +107,16 @@ class PaymobGateway implements PaymentGatewayInterface
             'expiration' => config('paymob.expiration', 3600),
         ];
 
-        $response = Http::withToken((string) config('paymob.secret_key'), 'Token')
-            ->acceptJson()
-            ->timeout(20)
-            ->post(rtrim((string) config('paymob.base_url'), '/').'/v1/intention/', $payload);
+        try {
+            $response = Http::withToken((string) config('paymob.secret_key'), 'Token')
+                ->acceptJson()
+                ->connectTimeout(5)
+                ->timeout(20)
+                ->post(rtrim((string) config('paymob.base_url'), '/').'/v1/intention/', $payload);
+        } catch (ConnectionException) {
+            Log::warning('paymob.create_intention_connection_failed', ['order_id' => $order->id]);
+            throw new PaymentGatewayException(__('payments.gateway_unavailable'));
+        }
 
         if ($response->failed()) {
             Log::warning('paymob.create_intention_failed', [

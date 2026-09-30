@@ -5,9 +5,13 @@ namespace Tests\Feature;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\InvalidPaymentSignatureException;
+use App\Exceptions\PaymentGatewayException;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Services\Payments\PaymobGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class PaymobGatewayTest extends TestCase
@@ -127,6 +131,54 @@ class PaymobGatewayTest extends TestCase
 
         $this->assertFalse($this->gateway()->isSandboxMode());
         $this->assertFalse($this->gateway()->supportsMethod(PaymentMethod::Card));
+    }
+
+    public function test_live_intention_uses_documented_item_amounts_and_exact_cents(): void
+    {
+        config([
+            'paymob.secret_key' => 'test-secret', 'paymob.public_key' => 'test-public',
+            'paymob.sandbox_mode' => false, 'paymob.card_integration_id' => 123,
+            'paymob.base_url' => 'https://paymob.example.test',
+        ]);
+        Http::preventStrayRequests();
+        Http::fake(['https://paymob.example.test/v1/intention/' => Http::response([
+            'client_secret' => 'test-client-secret', 'intention_order_id' => 456,
+        ])]);
+        $payment = Payment::factory()->create(['amount' => '0.30']);
+        OrderItem::factory()->create([
+            'order_id' => $payment->order_id, 'name_snapshot' => 'Test camera',
+            'unit_price' => '0.10', 'quantity' => 3, 'line_total' => '0.30',
+        ]);
+
+        $result = $this->gateway()->createPayment($payment, PaymentMethod::Card, 'https://store.example.test/return');
+
+        Http::assertSent(fn (Request $request): bool => $request['amount'] === 30
+            && $request['items'][0]['amount'] === 30 && $request['items'][0]['quantity'] === 3
+            && ! array_key_exists('amount_cents', $request['items'][0]));
+        Http::assertSentCount(1);
+        $this->assertFalse($result['sandbox_mode']);
+        $this->assertSame('456', $payment->fresh()->paymob_order_id);
+    }
+
+    public function test_intention_connection_failure_is_handled_without_retrying_an_ambiguous_payment(): void
+    {
+        config([
+            'paymob.secret_key' => 'test-secret', 'paymob.public_key' => 'test-public',
+            'paymob.sandbox_mode' => false, 'paymob.card_integration_id' => 123,
+        ]);
+        Http::fake(['*' => Http::failedConnection()]);
+        $payment = Payment::factory()->create();
+
+        try {
+            $this->gateway()->createPayment($payment, PaymentMethod::Card, 'https://store.example.test/return');
+            $this->fail('Connection failure must be a handled gateway error.');
+        } catch (PaymentGatewayException $exception) {
+            $this->assertSame(__('payments.gateway_unavailable'), $exception->getMessage());
+        }
+
+        $this->assertSame(PaymentStatus::Pending, $payment->fresh()->status);
+        $this->assertNull($payment->fresh()->transaction_reference);
+        Http::assertSentCount(1);
     }
 
     /**

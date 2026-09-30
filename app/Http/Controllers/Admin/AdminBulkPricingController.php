@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\PreviewBulkPricingRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\BulkPricingService;
+use App\Services\ProductOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,12 +18,15 @@ class AdminBulkPricingController extends Controller
 {
     public function __construct(private BulkPricingService $pricing) {}
 
-    public function index(Request $request): View
+    public function index(Request $request, ProductOptions $options): View
     {
         return view('admin.pricing.index', [
             'brands' => Product::query()->whereNotNull('brand')->distinct()->orderBy('brand')->pluck('brand'),
             'categories' => Category::query()->orderBy('name_en')->get(['id', 'name_en', 'name_ar']),
-            'products' => Product::query()->orderBy('sku')->get(['id', 'sku', 'name_en', 'name_ar']),
+            'productOptions' => $options->initial(collect((array) old('product_ids', []))->take(1000)
+                ->filter(fn ($id): bool => filter_var($id, FILTER_VALIDATE_INT) !== false)
+                ->map(fn ($id): int => (int) $id)->values()->all(), activeOnly: false)->map($options->option(...)),
+            'productCount' => Product::query()->count(),
             'batches' => DB::table('bulk_price_changes')->where('user_id', $request->user()->id)->orderByDesc('id')->paginate(20),
         ]);
     }
@@ -51,9 +55,10 @@ class AdminBulkPricingController extends Controller
 
     public function apply(ConfirmBulkPricingRequest $request, int $batch): RedirectResponse
     {
-        $this->pricing->apply($batch, $request->user()->id, $request->validated('token'));
+        $applied = $this->pricing->apply($batch, $request->user()->id, $request->validated('token'));
+        $response = redirect()->route('admin.pricing.show', $batch);
 
-        return redirect()->route('admin.pricing.show', $batch)->with('success', __('pricing.apply_complete'));
+        return $applied ? $response->with('success', __('pricing.apply_complete')) : $response;
     }
 
     public function undo(ConfirmBulkPricingRequest $request, int $batch): RedirectResponse

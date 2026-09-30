@@ -30,6 +30,7 @@ class PackageItem extends Model
         return $this->belongsTo(Package::class);
     }
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

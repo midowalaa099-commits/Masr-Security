@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\ProductStatus;
+use App\Services\PackageItemsValidator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,9 +32,15 @@ class UpdatePackageRequest extends FormRequest
             'discount_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'status' => ['required', Rule::enum(ProductStatus::class)],
             'featured' => ['boolean'],
-            'items' => ['nullable', 'array'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items' => ['nullable', 'array', 'max:'.PackageItemsValidator::MAX_ITEMS],
+            'items.*' => ['required', 'array:product_id,quantity'],
+            'items.*.product_id' => ['required', 'integer', 'min:1', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:9999'],
         ];
+    }
+
+    public function after(): array
+    {
+        return [new PackageItemsValidator];
     }
 }

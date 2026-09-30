@@ -65,27 +65,12 @@ class InventoryService
      */
     public function decrementForOrder(Order $order): void
     {
-        foreach ($order->items as $orderItem) {
-            $components = $this->lineComponents($orderItem->orderable_type, $orderItem->orderable_id, $orderItem->inventory_snapshot);
+        $components = $this->orderComponents($order);
+        $products = Product::query()->whereKey(array_keys($components))->orderBy('id')->lockForUpdate()->get();
 
-            foreach ($components as $productId => $lineQuantity) {
-                // Lock the row so internal counts remain consistent under concurrent orders.
-                $product = Product::query()
-                    ->whereKey($productId)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($product === null) {
-                    continue;
-                }
-
-                if ($product->stock_quantity === null) {
-                    continue;
-                }
-
-                $newStock = (int) $product->stock_quantity - (int) $lineQuantity;
-
-                $product->update(['stock_quantity' => $newStock]);
+        foreach ($products as $product) {
+            if ($product->stock_quantity !== null) {
+                $product->update(['stock_quantity' => (int) $product->stock_quantity - $components[$product->id]]);
             }
         }
     }
@@ -95,22 +80,28 @@ class InventoryService
      */
     public function restoreForOrder(Order $order): void
     {
-        foreach ($order->items as $orderItem) {
-            $components = $this->lineComponents($orderItem->orderable_type, $orderItem->orderable_id, $orderItem->inventory_snapshot);
+        foreach ($this->orderComponents($order) as $productId => $quantity) {
+            Product::query()->whereKey($productId)->whereNotNull('stock_quantity')->increment('stock_quantity', $quantity);
+        }
+    }
 
-            foreach ($components as $productId => $lineQuantity) {
-                Product::query()
-                    ->whereKey($productId)
-                    ->whereNotNull('stock_quantity')
-                    ->increment('stock_quantity', (int) $lineQuantity);
+    /** @return array<int, int> */
+    private function orderComponents(Order $order): array
+    {
+        $totals = [];
+        foreach ($order->items as $item) {
+            foreach ($this->lineComponents($item->orderable_type, $item->orderable_id, $item->inventory_snapshot, $item->quantity) as $id => $quantity) {
+                $totals[$id] = ($totals[$id] ?? 0) + $quantity;
             }
         }
+
+        return $totals;
     }
 
     /**
      * @return array<int, int> product_id => quantity
      */
-    private function lineComponents(string $orderableType, int $orderableId, ?array $snapshot): array
+    private function lineComponents(string $orderableType, int $orderableId, ?array $snapshot, int $quantity): array
     {
         if ($snapshot !== null && $snapshot !== []) {
             return $snapshot;
@@ -123,13 +114,13 @@ class InventoryService
 
             if ($package !== null) {
                 foreach ($package->items as $item) {
-                    $map[$item->product_id] = $item->quantity;
+                    $map[$item->product_id] = ($map[$item->product_id] ?? 0) + $item->quantity * $quantity;
                 }
             }
 
             return $map;
         }
 
-        return [];
+        return is_a($orderableType, Product::class, true) ? [$orderableId => $quantity] : [];
     }
 }

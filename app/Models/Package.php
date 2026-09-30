@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Contracts\Purchasable;
 use App\Enums\ProductStatus;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Database\Factories\PackageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string|null $base_price
+ */
 class Package extends Model implements Purchasable
 {
     /** @use HasFactory<PackageFactory> */
@@ -41,6 +46,7 @@ class Package extends Model implements Purchasable
         ];
     }
 
+    /** @return HasMany<PackageItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(PackageItem::class)->with('product');
@@ -62,13 +68,15 @@ class Package extends Model implements Purchasable
      */
     public function componentsTotal(): string
     {
-        $total = 0.0;
+        $total = BigDecimal::of('0.00');
 
         foreach ($this->items as $item) {
-            $total += (float) $item->product->displayPrice() * $item->quantity;
+            if ($item->product !== null) {
+                $total = $total->plus(BigDecimal::of($item->product->displayPrice())->multipliedBy($item->quantity));
+            }
         }
 
-        return number_format(round($total, 2), 2, '.', '');
+        return (string) $total->toScale(2, RoundingMode::HalfUp);
     }
 
     public function useComponentPricing(): bool
@@ -79,10 +87,10 @@ class Package extends Model implements Purchasable
     public function effectivePricing(): string
     {
         if (! $this->useComponentPricing() && $this->base_price !== null) {
-            return number_format((float) $this->base_price, 2, '.', '');
+            return $this->base_price;
         }
 
-        return number_format(max(0, (float) $this->componentsTotal() - (float) $this->discount_amount), 2, '.', '');
+        return (string) BigDecimal::max('0', BigDecimal::of($this->componentsTotal())->minus($this->discount_amount ?? '0'))->toScale(2, RoundingMode::HalfUp);
     }
 
     // -------- Purchasable contract --------

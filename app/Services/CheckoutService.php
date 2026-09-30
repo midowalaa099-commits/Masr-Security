@@ -9,7 +9,6 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\Order;
 use App\Models\Package;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -36,7 +35,6 @@ class CheckoutService
     public function placeOrder(array $customerData): Order
     {
         return DB::transaction(function () use ($customerData) {
-            /** @var Collection<int, CartItemValue> $cartItems */
             $cartItems = $this->cart->items(lockForCheckout: true);
 
             if ($cartItems->isEmpty()) {
@@ -47,14 +45,13 @@ class CheckoutService
                 throw new CartPriceChangedException;
             }
 
-            $subtotal = round($cartItems->sum(fn (CartItemValue $item) => (float) $item->lineTotal()), 2);
-            $shippingFee = 0.0;
+            $subtotal = $this->cart->subtotal($cartItems);
 
             $order = new Order($customerData + [
                 'user_id' => auth()->id(),
-                'subtotal' => number_format($subtotal, 2, '.', ''),
-                'shipping_fee' => number_format($shippingFee, 2, '.', ''),
-                'total' => number_format(round($subtotal + $shippingFee, 2), 2, '.', ''),
+                'subtotal' => $subtotal,
+                'shipping_fee' => '0.00',
+                'total' => $subtotal,
                 'status' => OrderStatus::Pending,
             ]);
 
@@ -66,7 +63,7 @@ class CheckoutService
                     'orderable_type' => $item->type === 'package' ? Package::class : Product::class,
                     'orderable_id' => $item->id,
                     'name_snapshot' => $item->name,
-                    'sku_snapshot' => $item->type === 'product' ? $item->model->sku : null,
+                    'sku_snapshot' => $item->model instanceof Product ? $item->model->sku : null,
                     'inventory_snapshot' => $this->inventorySnapshot($item),
                     'unit_price' => $item->unitPrice,
                     'quantity' => $item->quantity,
@@ -97,7 +94,7 @@ class CheckoutService
         $package = $item->model;
 
         foreach ($package->items as $packageItem) {
-            $map[$packageItem->product_id] = $packageItem->quantity * $item->quantity;
+            $map[$packageItem->product_id] = ($map[$packageItem->product_id] ?? 0) + $packageItem->quantity * $item->quantity;
         }
 
         return $map;

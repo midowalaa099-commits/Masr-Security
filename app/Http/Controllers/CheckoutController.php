@@ -13,7 +13,6 @@ use App\Models\Payment;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\PaymentService;
-use App\Services\SettingsService;
 use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
@@ -22,7 +21,6 @@ class CheckoutController extends Controller
         private readonly CartService $cart,
         private readonly CheckoutService $checkout,
         private readonly PaymentService $payments,
-        private readonly SettingsService $settings,
     ) {}
 
     public function index()
@@ -43,14 +41,13 @@ class CheckoutController extends Controller
         }
 
         $this->cart->rememberReviewedPrices($items);
-        $subtotal = round($items->sum(fn ($item): float => (float) $item->lineTotal()), 2);
-        $shippingFee = $this->checkout->calculateShipping($subtotal);
+        $subtotal = $this->cart->subtotal($items);
 
         return view('store.checkout', [
             'items' => $items,
             'subtotal' => $subtotal,
-            'shippingFee' => $shippingFee,
-            'total' => round($subtotal + $shippingFee, 2),
+            'shippingFee' => '0.00',
+            'total' => $subtotal,
             'paymentMethods' => collect(PaymentMethod::cases())
                 ->filter(fn (PaymentMethod $method): bool => ! $method->requiresGateway() || $this->payments->gateway()->supportsMethod($method)),
             'preset' => [

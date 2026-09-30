@@ -10,7 +10,8 @@ use App\Models\Package;
 use App\Models\PackageItem;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Brick\Math\BigDecimal;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -137,9 +138,7 @@ class CartService
         session()->forget('cart.review_prices');
         $priceKey = 'cart.added_prices.'.$purchasable->cartTypeKey().':'.$purchasable->getKey();
 
-        if (! session()->has($priceKey)) {
-            session()->put($priceKey, $purchasable->displayPrice());
-        }
+        session()->put($priceKey, $purchasable->displayPrice());
 
         $entry = ['type' => $purchasable->cartTypeKey(), 'id' => $purchasable->getKey()];
 
@@ -279,9 +278,15 @@ class CartService
         return (int) collect(session()->get(self::SESSION_KEY, []))->sum('quantity');
     }
 
-    public function subtotal(): float
+    /** @param Collection<int, CartItemValue>|null $items */
+    public function subtotal(?Collection $items = null): string
     {
-        return round($this->items()->sum(fn (CartItemValue $item) => $item->lineTotal()), 2);
+        $total = BigDecimal::of('0.00');
+        foreach ($items ?? $this->items() as $item) {
+            $total = $total->plus($item->lineTotal());
+        }
+
+        return (string) $total->toScale(2);
     }
 
     /**

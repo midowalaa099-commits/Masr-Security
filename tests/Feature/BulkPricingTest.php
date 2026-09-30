@@ -35,8 +35,12 @@ class BulkPricingTest extends TestCase
 
         $this->assertSame('1000.00', $product->fresh()->price);
         $this->get(route('admin.pricing.show', $batch->id))->assertSee('1000.00')->assertSee('1100.00')->assertDontSee('pricing.title');
-        $this->applyBatch($batch)->assertRedirect(route('admin.pricing.show', $batch->id));
-        $this->applyBatch($batch)->assertRedirect();
+        $this->applyBatch($batch)
+            ->assertRedirect(route('admin.pricing.show', $batch->id))
+            ->assertSessionHas('success', __('pricing.apply_complete'));
+        $this->applyBatch($batch)
+            ->assertRedirect(route('admin.pricing.show', $batch->id))
+            ->assertSessionMissing('success');
         $this->assertSame('1100.00', $product->fresh()->price);
         $this->assertSame('880.00', $product->fresh()->sale_price);
         $this->assertDatabaseHas('audit_logs', ['action' => 'bulk_pricing_applied', 'user_id' => $admin->id, 'entity_id' => $product->id]);

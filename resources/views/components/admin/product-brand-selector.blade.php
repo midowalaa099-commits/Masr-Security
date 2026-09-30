@@ -15,7 +15,7 @@
             @foreach ($brandOptions as $brand)
                 <label class="group relative cursor-pointer">
                     <input
-                        id="brand-{{ strtolower($brand) }}"
+                        id="brand-{{ $loop->index }}"
                         type="radio"
                         name="brand"
                         value="{{ $brand }}"

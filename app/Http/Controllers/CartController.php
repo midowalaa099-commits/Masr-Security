@@ -19,7 +19,7 @@ class CartController extends Controller
 
         return view('store.cart', [
             'items' => $items,
-            'subtotal' => $this->cart->subtotal(),
+            'subtotal' => $this->cart->subtotal($items),
         ]);
     }
 

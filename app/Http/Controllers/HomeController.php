@@ -37,7 +37,7 @@ class HomeController extends Controller
         $displayCategory = Category::query()->where('slug', 'interactive-displays')->first();
 
         $displays = $displayCategory
-            ? Product::query()->active()->where('category_id', $displayCategory->id)->with(['images'])->latest()->limit(4)->get()
+            ? Product::query()->active()->where('category_id', $displayCategory->id)->with(['images', 'category'])->latest()->limit(4)->get()
             : collect();
 
         return view('store.home', compact('featuredProducts', 'featuredPackages', 'categories', 'displays'));
