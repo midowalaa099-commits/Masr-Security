@@ -149,21 +149,18 @@ class ProductImageTest extends TestCase
     public function test_uploaded_object_is_removed_when_product_image_persistence_fails(): void
     {
         Storage::fake('s3');
-        $product = Product::factory()->create();
-        $this->rejectProductImageInserts();
+        $product = Product::factory()->make(['id' => -1]);
 
         $exception = null;
 
         try {
-            app(ProductImageStorage::class)->store($product, UploadedFile::fake()->image('failed.jpg'));
+            DB::transaction(fn () => app(ProductImageStorage::class)->store($product, UploadedFile::fake()->image('failed.jpg')));
         } catch (Throwable $caught) {
             $exception = $caught;
-        } finally {
-            DB::statement('DROP TRIGGER reject_product_image_insert');
         }
 
         $this->assertInstanceOf(QueryException::class, $exception);
-        $this->assertStringContainsString('product image insert rejected', $exception->getMessage());
+        $this->assertStringContainsString('product_images', $exception->getSql());
         $this->assertDatabaseCount('product_images', 0);
         Storage::disk('s3')->assertDirectoryEmpty('supabase');
     }
@@ -171,8 +168,7 @@ class ProductImageTest extends TestCase
     public function test_image_persistence_exception_is_preserved_when_object_cleanup_fails(): void
     {
         Storage::fake('s3');
-        $product = Product::factory()->create();
-        $this->rejectProductImageInserts();
+        $product = Product::factory()->make(['id' => -1]);
 
         $storage = $this->partialMock(MediaStorage::class);
         $storage->shouldReceive('store')->passthru();
@@ -182,29 +178,16 @@ class ProductImageTest extends TestCase
         $exception = null;
 
         try {
-            app(ProductImageStorage::class)->store($product, UploadedFile::fake()->image('failed.jpg'));
+            DB::transaction(fn () => app(ProductImageStorage::class)->store($product, UploadedFile::fake()->image('failed.jpg')));
         } catch (Throwable $caught) {
             $exception = $caught;
-        } finally {
-            DB::statement('DROP TRIGGER reject_product_image_insert');
         }
 
         $this->assertInstanceOf(QueryException::class, $exception);
-        $this->assertStringContainsString('product image insert rejected', $exception->getMessage());
+        $this->assertStringContainsString('product_images', $exception->getSql());
         Log::shouldHaveReceived('error')->once()->with(
             'product_image.upload_cleanup_failed',
             \Mockery::on(static fn (array $context): bool => str_starts_with($context['storage_key'], 'supabase/products/')),
         );
-    }
-
-    private function rejectProductImageInserts(): void
-    {
-        DB::statement("
-            CREATE TRIGGER reject_product_image_insert
-            BEFORE INSERT ON product_images
-            BEGIN
-                SELECT RAISE(ABORT, 'product image insert rejected');
-            END
-        ");
     }
 }

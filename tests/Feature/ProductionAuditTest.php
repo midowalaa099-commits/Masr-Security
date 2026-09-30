@@ -101,9 +101,9 @@ class ProductionAuditTest extends TestCase
     public function test_login_merges_the_guest_session_cart_into_the_account(): void
     {
         $this->shippingFee();
-        $this->createProduct(1000, 10);
+        $product = $this->createProduct(1000, 10);
 
-        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => 2]);
+        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => 2])->assertRedirect();
 
         $customer = User::factory()->create(['email' => 'merge@example.com', 'password' => 'password']);
 
@@ -114,15 +114,15 @@ class ProductionAuditTest extends TestCase
 
         $this->assertSame(2, (int) $cart->items()->firstOrFail()->quantity);
 
-        $this->actingAs($customer)->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => 1]);
+        $this->actingAs($customer)->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => 1])->assertRedirect();
         $this->assertSame(3, (int) $cart->fresh()->items()->firstOrFail()->quantity);
     }
 
     public function test_registration_merges_the_guest_session_cart(): void
     {
-        $this->createProduct(1000, 10);
+        $product = $this->createProduct(1000, 10);
 
-        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => 2]);
+        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => 2])->assertRedirect();
 
         $this->post(route('register'), [
             'name' => 'New Customer',
@@ -167,8 +167,8 @@ class ProductionAuditTest extends TestCase
     public function test_frontend_submitted_totals_are_ignored(): void
     {
         $this->shippingFee();
-        $this->createProduct(1000, 10);
-        $this->addToCart('product', 1, 2);
+        $product = $this->createProduct(1000, 10);
+        $this->addToCart('product', $product->id, 2);
 
         $this->post(route('checkout.store'), [
             'customer_name' => 'Test User',
@@ -197,20 +197,20 @@ class ProductionAuditTest extends TestCase
         $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 99999, 'quantity' => 1])
             ->assertNotFound();
 
-        $this->createProduct();
+        $product = $this->createProduct();
 
-        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => 0])
+        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => 0])
             ->assertSessionHasErrors('quantity');
 
-        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => -3])
+        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => -3])
             ->assertSessionHasErrors('quantity');
     }
 
     public function test_inactive_product_and_package_cannot_be_added_to_the_cart(): void
     {
-        Product::factory()->create(['status' => ProductStatus::Inactive]);
+        $product = Product::factory()->create(['status' => ProductStatus::Inactive]);
 
-        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => 1, 'quantity' => 1])
+        $this->post(route('cart.add'), ['type' => 'product', 'cartable' => $product->id, 'quantity' => 1])
             ->assertNotFound();
 
         $package = Package::factory()->create(['status' => ProductStatus::Inactive]);
@@ -243,13 +243,13 @@ class ProductionAuditTest extends TestCase
     public function test_checkout_accepts_a_package_when_component_stock_is_low(): void
     {
         $componentA = Product::factory()->component()->create(['price' => 500, 'stock_quantity' => 4]);
-        Product::factory()->component()->create(['price' => 300, 'stock_quantity' => 10]);
+        $componentB = Product::factory()->component()->create(['price' => 300, 'stock_quantity' => 10]);
 
         $package = Package::factory()->create(['use_component_pricing' => true, 'discount_amount' => 0]);
 
         $package->items()->saveMany([
             new PackageItem(['product_id' => $componentA->id, 'quantity' => 2]),
-            new PackageItem(['product_id' => 2, 'quantity' => 1]),
+            new PackageItem(['product_id' => $componentB->id, 'quantity' => 1]),
         ]);
 
         $this->addToCart('package', $package->id, 2);
@@ -330,8 +330,8 @@ class ProductionAuditTest extends TestCase
     public function test_a_finalized_payment_is_never_downgraded_by_a_late_callback(): void
     {
         $this->shippingFee();
-        $this->createProduct(1000, 10);
-        $this->addToCart('product', 1, 2);
+        $product = $this->createProduct(1000, 10);
+        $this->addToCart('product', $product->id, 2);
 
         $order = $this->placeOrderThroughCheckout();
         $payment = Order::firstOrFail()->payments()->firstOrFail();
@@ -437,8 +437,8 @@ class ProductionAuditTest extends TestCase
     public function test_sandbox_cannot_finalize_an_already_finalized_payment(): void
     {
         $this->shippingFee();
-        $this->createProduct(1000, 10);
-        $this->addToCart('product', 1, 2);
+        $product = $this->createProduct(1000, 10);
+        $this->addToCart('product', $product->id, 2);
 
         $order = $this->placeOrderThroughCheckout();
         $payment = $order->payments()->firstOrFail();

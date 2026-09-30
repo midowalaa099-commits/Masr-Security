@@ -21,15 +21,17 @@ class CheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function cartWithProduct(float $price, int $stock, int $quantity): void
+    private function cartWithProduct(float $price, int $stock, int $quantity): Product
     {
-        Product::factory()->create(['price' => $price, 'stock_quantity' => $stock]);
+        $product = Product::factory()->create(['price' => $price, 'stock_quantity' => $stock]);
 
         $this->post(route('cart.add'), [
             'type' => 'product',
-            'cartable' => 1,
+            'cartable' => $product->id,
             'quantity' => $quantity,
-        ]);
+        ])->assertRedirect(route('cart.index'));
+
+        return $product;
     }
 
     public function test_checkout_requires_items_in_the_cart(): void
@@ -47,7 +49,7 @@ class CheckoutTest extends TestCase
     {
         Setting::create(['key' => 'shipping_fee', 'value' => '60']);
 
-        $this->cartWithProduct(1000, 10, 2);
+        $product = $this->cartWithProduct(1000, 10, 2);
 
         $this->post(route('checkout.store'), [
             'customer_name' => 'Test User',
@@ -68,7 +70,7 @@ class CheckoutTest extends TestCase
         $this->assertSame(OrderStatus::AwaitingPayment, $order->status);
         $this->assertNull($order->user_id);
 
-        $this->assertSame(8, (int) Product::findOrFail(1)->stock_quantity);
+        $this->assertSame(8, (int) $product->fresh()->stock_quantity);
         $this->assertSame([], session('cart.items', []));
 
         $payment = Payment::where('order_id', $order->id)->firstOrFail();
