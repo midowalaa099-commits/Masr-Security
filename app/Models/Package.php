@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Contracts\Purchasable;
 use App\Enums\ProductStatus;
 use Database\Factories\PackageFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -43,6 +44,11 @@ class Package extends Model implements Purchasable
     public function items(): HasMany
     {
         return $this->hasMany(PackageItem::class)->with('product');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', ProductStatus::Active->value);
     }
 
     public function products(): BelongsToMany

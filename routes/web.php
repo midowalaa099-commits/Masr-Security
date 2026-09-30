@@ -66,7 +66,9 @@ Route::middleware('storefront')->group(function () {
     Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
     Route::get('/quote', [QuoteRequestController::class, 'create'])->name('quote.create');
-    Route::post('/quote', [QuoteRequestController::class, 'store'])->name('quote.store');
+    Route::post('/quote', [QuoteRequestController::class, 'store'])
+        ->middleware('throttle:quote-submissions')
+        ->name('quote.store');
 
     Route::match(['get', 'post'], '/locale/{locale}', [LocaleController::class, 'switch'])
         ->whereIn('locale', SetLocale::SUPPORTED)

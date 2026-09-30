@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePackageRequest;
 use App\Http\Requests\Admin\UpdatePackageRequest;
@@ -11,16 +10,18 @@ use App\Models\Package;
 use App\Models\Product;
 use App\Services\AuditLogger;
 use App\Services\MediaStorage;
+use App\Services\UniqueSlugGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminPackageController extends Controller
 {
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly MediaStorage $media,
+        private readonly UniqueSlugGenerator $slugs,
     ) {}
 
     public function index(Request $request)
@@ -41,7 +42,7 @@ class AdminPackageController extends Controller
     public function create()
     {
         $products = Product::query()
-            ->where('status', ProductStatus::Active->value)
+            ->active()
             ->orderBy('name_en')
             ->get();
 
@@ -52,7 +53,7 @@ class AdminPackageController extends Controller
     {
         $data = $request->safe()->except(['cover_image', 'items']);
 
-        $data['slug'] = $data['slug'] ?: $this->uniqueSlug($data['name_en']);
+        $data['slug'] = $data['slug'] ?: $this->slugs->generate($data['name_en'], 'package', new Package);
         $data['use_component_pricing'] = $request->boolean('use_component_pricing');
         $data['featured'] = $request->boolean('featured');
 
@@ -81,7 +82,7 @@ class AdminPackageController extends Controller
         $package->load('items.product');
 
         $products = Product::query()
-            ->where('status', ProductStatus::Active->value)
+            ->active()
             ->orderBy('name_en')
             ->get();
 
@@ -94,7 +95,7 @@ class AdminPackageController extends Controller
 
         $data = $request->safe()->except(['cover_image', 'remove_cover', 'items']);
 
-        $data['slug'] = $data['slug'] ?: $this->uniqueSlug($data['name_en'], $package);
+        $data['slug'] = $data['slug'] ?: $this->slugs->generate($data['name_en'], 'package', new Package, $package);
         $data['use_component_pricing'] = $request->boolean('use_component_pricing');
         $data['featured'] = $request->boolean('featured');
         $replacedCover = null;
@@ -148,17 +149,36 @@ class AdminPackageController extends Controller
 
     public function calculate(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'items' => ['required', 'array'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.product_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
+        $products = Product::query()
+            ->whereKey(collect($validated['items'])->pluck('product_id')->unique())
+            ->get()
+            ->keyBy('id');
+
+        $errors = [];
         $total = 0.0;
 
-        foreach ($request->input('items') as $row) {
-            $product = Product::query()->whereKey($row['product_id'])->firstOrFail();
+        foreach ($validated['items'] as $index => $row) {
+            $product = $products->get((int) $row['product_id']);
+
+            if ($product === null) {
+                $errors["items.{$index}.product_id"] = [
+                    __('validation.exists', ['attribute' => "items.{$index}.product id"]),
+                ];
+
+                continue;
+            }
+
             $total += $product->displayPrice() * (int) $row['quantity'];
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
         }
 
         return response()->json(['total' => round($total, 2), 'formatted' => money($total)]);
@@ -181,28 +201,5 @@ class AdminPackageController extends Controller
                 'quantity' => max(1, (int) ($row['quantity'] ?? 1)),
             ]);
         }
-    }
-
-    private function uniqueSlug(string $name, ?Package $ignore = null): string
-    {
-        $base = Str::slug($name) ?: 'package';
-        $slug = $base;
-        $i = 2;
-
-        $query = Package::query()->where('slug', $slug);
-
-        if ($ignore) {
-            $query->where('id', '!=', $ignore->id);
-        }
-
-        while ($query->exists()) {
-            $slug = $base.'-'.$i++;
-            $query = Package::query()->where('slug', $slug);
-            if ($ignore) {
-                $query->where('id', '!=', $ignore->id);
-            }
-        }
-
-        return $slug;
     }
 }

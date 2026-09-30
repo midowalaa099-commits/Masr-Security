@@ -10,7 +10,10 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\InventoryService;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
@@ -134,6 +137,28 @@ class AdminTest extends TestCase
         $this->assertSame(7, (int) $product->fresh()->stock_quantity);
     }
 
+    public function test_order_status_audit_is_rolled_back_when_the_status_update_fails(): void
+    {
+        $order = Order::factory()->paid()->create();
+        Payment::factory()->successful()->for($order)->create();
+
+        $this->mock(InventoryService::class)
+            ->shouldReceive('restoreForOrder')
+            ->once()
+            ->andThrow(new \RuntimeException('Inventory restoration failed.'));
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.orders.status', $order), ['status' => OrderStatus::Cancelled->value])
+            ->assertServerError();
+
+        $this->assertSame(OrderStatus::Paid, $order->fresh()->status);
+        $this->assertDatabaseMissing('audit_logs', [
+            'action' => 'order_status_changed',
+            'entity_type' => Order::class,
+            'entity_id' => $order->id,
+        ]);
+    }
+
     public function test_admin_package_calculate_returns_the_components_total(): void
     {
         $componentA = Product::factory()->component()->create(['price' => 500]);
@@ -148,6 +173,43 @@ class AdminTest extends TestCase
             ])
             ->assertOk()
             ->assertJson(['total' => 1300]);
+    }
+
+    public function test_admin_package_calculate_fetches_all_products_in_one_query(): void
+    {
+        $componentA = Product::factory()->component()->create(['price' => 500]);
+        $componentB = Product::factory()->component()->create(['price' => 300]);
+        $productSelects = 0;
+
+        DB::listen(function (QueryExecuted $query) use (&$productSelects): void {
+            if (str_contains(strtolower($query->sql), 'from "products"')) {
+                $productSelects++;
+            }
+        });
+
+        $this->actingAs($this->admin())
+            ->postJson(route('admin.packages.calculate'), [
+                'items' => [
+                    ['product_id' => $componentA->id, 'quantity' => 2],
+                    ['product_id' => $componentB->id, 'quantity' => 1],
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['total' => 1300]);
+
+        $this->assertSame(1, $productSelects);
+    }
+
+    public function test_admin_package_calculate_rejects_unknown_product_ids(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson(route('admin.packages.calculate'), [
+                'items' => [
+                    ['product_id' => 999999, 'quantity' => 1],
+                ],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('items.0.product_id');
     }
 
     public function test_admin_cannot_mark_a_delivered_order_as_cancelled(): void

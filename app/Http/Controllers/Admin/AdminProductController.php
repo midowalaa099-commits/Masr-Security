@@ -13,17 +13,18 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\AuditLogger;
 use App\Services\ProductImageStorage;
+use App\Services\UniqueSlugGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class AdminProductController extends Controller
 {
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly ProductImageStorage $images,
+        private readonly UniqueSlugGenerator $slugs,
     ) {}
 
     public function index(Request $request)
@@ -57,7 +58,7 @@ class AdminProductController extends Controller
     {
         $data = $request->safe()->except(['images', 'specs']);
 
-        $data['slug'] = ($data['slug'] ?? null) ?: $this->uniqueSlug('product', $data['sku']);
+        $data['slug'] = ($data['slug'] ?? null) ?: $this->slugs->generate($data['sku'], 'product', new Product);
         $data['featured'] = $request->boolean('featured');
 
         $product = DB::transaction(function () use ($data, $request): Product {
@@ -98,7 +99,7 @@ class AdminProductController extends Controller
 
         $data = $request->safe()->except(['images', 'specs']);
 
-        $data['slug'] = ($data['slug'] ?? null) ?: $this->uniqueSlug('product', $data['sku'], $product);
+        $data['slug'] = ($data['slug'] ?? null) ?: $this->slugs->generate($data['sku'], 'product', new Product, $product);
         $data['featured'] = $request->boolean('featured');
 
         DB::transaction(function () use ($product, $data, $request, $old): void {
@@ -213,26 +214,4 @@ class AdminProductController extends Controller
         }
     }
 
-    private function uniqueSlug(string $kind, string $reference, ?Product $ignore = null): string
-    {
-        $base = Str::slug($reference) ?: $kind;
-        $slug = $base;
-        $i = 2;
-
-        $query = Product::query()->where('slug', $slug);
-
-        if ($ignore) {
-            $query->where('id', '!=', $ignore->id);
-        }
-
-        while ($query->exists()) {
-            $slug = $base.'-'.$i++;
-            $query = Product::query()->where('slug', $slug);
-            if ($ignore) {
-                $query->where('id', '!=', $ignore->id);
-            }
-        }
-
-        return $slug;
-    }
 }

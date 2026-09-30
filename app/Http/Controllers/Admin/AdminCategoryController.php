@@ -8,16 +8,17 @@ use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Services\AuditLogger;
 use App\Services\MediaStorage;
+use App\Services\UniqueSlugGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
 {
     public function __construct(
         private readonly AuditLogger $audit,
         private readonly MediaStorage $media,
+        private readonly UniqueSlugGenerator $slugs,
     ) {}
 
     public function index(Request $request)
@@ -55,7 +56,7 @@ class AdminCategoryController extends Controller
         }
 
         $slug = $data['slug'] ?? null;
-        $data['slug'] = $slug ?: $this->uniqueSlug($data['name_en']);
+        $data['slug'] = $slug ?: $this->slugs->generate($data['name_en'], 'category', new Category);
 
         $category = Category::create($data + ['is_active' => $request->boolean('is_active')]);
 
@@ -135,18 +136,5 @@ class AdminCategoryController extends Controller
         Cache::forget('storefront.nav.category_ids');
 
         return back()->with('success', __('admin.category_updated'));
-    }
-
-    private function uniqueSlug(string $name): string
-    {
-        $base = Str::slug($name) ?: 'category';
-        $slug = $base;
-        $i = 2;
-
-        while (Category::query()->where('slug', $slug)->exists()) {
-            $slug = $base.'-'.$i++;
-        }
-
-        return $slug;
     }
 }

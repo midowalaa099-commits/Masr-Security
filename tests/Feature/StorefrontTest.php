@@ -124,6 +124,29 @@ class StorefrontTest extends TestCase
         ]);
     }
 
+    public function test_quote_submissions_are_limited_to_five_per_minute_per_ip(): void
+    {
+        $quote = [
+            'name' => 'Mohamed',
+            'phone' => '01000000000',
+            'email' => 'mohamed@example.com',
+        ];
+
+        for ($submission = 0; $submission < 5; $submission++) {
+            $this->post(route('quote.store'), $quote)
+                ->assertRedirect(route('quote.create'));
+        }
+
+        $this->post(route('quote.store'), $quote)
+            ->assertTooManyRequests();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->post(route('quote.store'), $quote)
+            ->assertRedirect(route('quote.create'));
+
+        $this->assertDatabaseCount('quote_requests', 6);
+    }
+
     public function test_quote_request_validates_phone(): void
     {
         $this->from(route('quote.create'))

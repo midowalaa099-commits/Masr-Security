@@ -66,8 +66,6 @@ class AdminOrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = OrderStatus::from($request->validated('status'));
 
-        $this->audit->orderStatusChanged($order, $oldStatus->value, $newStatus->value);
-
         DB::transaction(function () use ($order, $request, $oldStatus, $newStatus) {
             // Restore stock when an open order is cancelled before fulfillment.
             if ($newStatus === OrderStatus::Cancelled && $oldStatus->isBeforeFulfillment()) {
@@ -84,6 +82,8 @@ class AdminOrderController extends Controller
                 'tracking_number' => $request->validated('tracking_number') ?: $order->tracking_number,
                 'admin_note' => $request->filled('admin_note') ? $request->validated('admin_note') : $order->admin_note,
             ]);
+
+            $this->audit->orderStatusChanged($order, $oldStatus->value, $newStatus->value);
         });
 
         return back()->with('success', __('admin.order_status_updated'));

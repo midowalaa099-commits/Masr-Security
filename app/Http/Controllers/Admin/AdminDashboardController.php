@@ -15,13 +15,13 @@ class AdminDashboardController extends Controller
     {
         $counts = Order::query()
             ->selectRaw('COUNT(*) as total')
-            ->selectRaw("SUM(CASE WHEN status NOT IN ('cancelled') THEN total ELSE 0 END) as revenue")
-            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending")
-            ->selectRaw("SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid")
+            ->selectRaw('SUM(CASE WHEN status != ? THEN total ELSE 0 END) as revenue', [OrderStatus::Cancelled->value])
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending', [OrderStatus::Pending->value])
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as paid', [OrderStatus::Paid->value])
             ->first();
 
         $lowStockProducts = Product::query()
-            ->where('status', 'active')
+            ->active()
             ->whereNotNull('stock_quantity')
             ->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
             ->with('category')

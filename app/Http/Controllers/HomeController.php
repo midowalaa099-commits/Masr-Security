@@ -19,7 +19,7 @@ class HomeController extends Controller
             ->get();
 
         $featuredPackages = Package::query()
-            ->where('status', 'active')
+            ->active()
             ->where('featured', true)
             ->with('items.product.images')
             ->latest()

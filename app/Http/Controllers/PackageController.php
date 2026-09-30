@@ -10,7 +10,7 @@ class PackageController extends Controller
     public function index()
     {
         $packages = Package::query()
-            ->where('status', 'active')
+            ->active()
             ->with(['items.product.images'])
             ->latest()
             ->paginate(9);
