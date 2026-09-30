@@ -10,6 +10,8 @@ return [
     'password' => 'كلمة المرور',
     'password_requirements_short' => '٨ أحرف أو أكثر · أحرف كبيرة وصغيرة · رقم · رمز',
     'password_requirements_met' => 'تم استيفاء متطلبات كلمة المرور.',
+    'password_strength_weak' => 'كلمة المرور ضعيفة',
+    'password_strength_strong' => 'كلمة المرور قوية',
     'show_password' => 'إظهار كلمة المرور',
     'hide_password' => 'إخفاء كلمة المرور',
     'confirm_password' => 'تأكيد كلمة المرور',

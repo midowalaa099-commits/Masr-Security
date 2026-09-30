@@ -10,6 +10,8 @@ return [
     'password' => 'Password',
     'password_requirements_short' => '8+ characters · upper & lower case · number · symbol',
     'password_requirements_met' => 'Password requirements met.',
+    'password_strength_weak' => 'Weak password',
+    'password_strength_strong' => 'Strong password',
     'show_password' => 'Show password',
     'hide_password' => 'Hide password',
     'confirm_password' => 'Confirm password',

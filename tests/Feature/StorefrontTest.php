@@ -39,6 +39,21 @@ class StorefrontTest extends TestCase
         $this->get('/login')->assertOk();
     }
 
+    public function test_about_page_content_is_fully_localized(): void
+    {
+        $this->get(route('about'))
+            ->assertOk()
+            ->assertSee(__('store.about_company_intro'))
+            ->assertSee(__('store.about_genuine_title'));
+
+        $this->withSession(['locale' => 'ar'])
+            ->get(route('about'))
+            ->assertOk()
+            ->assertSee('مصر سيكيوريتي')
+            ->assertSee('منتجات أصلية')
+            ->assertDontSee('Genuine products');
+    }
+
     public function test_guest_header_includes_login_and_registration_links_in_both_locales(): void
     {
         $this->get(route('home'))

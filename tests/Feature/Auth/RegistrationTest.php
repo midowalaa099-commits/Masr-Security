@@ -15,6 +15,9 @@ class RegistrationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee(__('auth_pages.password_requirements_short'));
+        $response->assertSee(__('auth_pages.password_strength_weak'));
+        $response->assertSee(__('auth_pages.password_strength_strong'));
+        $response->assertSee("meetsRequirements ? 'text-emerald-700' : 'text-rose-600'", false);
         $this->assertSame(2, substr_count($response->getContent(), 'x-on:click="showPassword = !showPassword"'));
         $this->assertSame(2, substr_count($response->getContent(), 'x-bind:type='));
     }

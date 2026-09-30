@@ -44,10 +44,23 @@
 
     @if ($showStrength)
         <p
-            class="mt-2 text-xs leading-5 text-slate-500"
-            x-bind:class="meetsRequirements ? 'text-emerald-700' : 'text-slate-500'"
-            x-text="meetsRequirements ? @js(__('auth_pages.password_requirements_met')) : @js(__('auth_pages.password_requirements_short'))"
+            class="mt-2 flex items-center gap-2 text-xs font-semibold leading-5 transition-colors duration-200"
+            x-bind:class="meetsRequirements ? 'text-emerald-700' : 'text-rose-600'"
+            role="status"
             aria-live="polite"
-        >{{ __('auth_pages.password_requirements_short') }}</p>
+        >
+            <span
+                class="h-2 w-2 shrink-0 rounded-full bg-current shadow-[0_0_0_3px_currentColor] opacity-70"
+                aria-hidden="true"
+            ></span>
+            <span>
+                <span x-text="meetsRequirements ? @js(__('auth_pages.password_strength_strong')) : @js(__('auth_pages.password_strength_weak'))">
+                    {{ __('auth_pages.password_strength_weak') }}
+                </span>
+                <span x-show="!meetsRequirements" class="font-medium opacity-80">
+                    · {{ __('auth_pages.password_requirements_short') }}
+                </span>
+            </span>
+        </p>
     @endif
 </div>
