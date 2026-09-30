@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\PackageItem;
 use App\Models\Product;
+use App\Models\ProductBrand;
 use App\Models\ProductImage;
 use App\Services\AuditLogger;
 use App\Services\ProductImageStorage;
@@ -18,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminProductController extends Controller
 {
@@ -50,8 +52,9 @@ class AdminProductController extends Controller
     public function create()
     {
         $categories = Category::query()->orderBy('sort_order')->get();
+        $brands = ProductBrand::query()->orderBy('name')->get();
 
-        return view('admin.products.create', compact('categories'));
+        return view('admin.products.create', compact('categories', 'brands'));
     }
 
     public function store(StoreProductRequest $request): RedirectResponse
@@ -62,6 +65,7 @@ class AdminProductController extends Controller
         $data['featured'] = $request->boolean('featured');
 
         $product = DB::transaction(function () use ($data, $request): Product {
+            $this->lockProductBrandForAssignment($data['brand'] ?? null);
             $product = Product::create($data);
 
             $this->images->storeMany($product, $request->file('images', []));
@@ -87,8 +91,9 @@ class AdminProductController extends Controller
         $product->load(['images', 'specs']);
 
         $categories = Category::query()->orderBy('sort_order')->get();
+        $brands = ProductBrand::query()->orderBy('name')->get();
 
-        return view('admin.products.edit', compact('product', 'categories'));
+        return view('admin.products.edit', compact('product', 'categories', 'brands'));
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
@@ -103,6 +108,7 @@ class AdminProductController extends Controller
         $data['featured'] = $request->boolean('featured');
 
         DB::transaction(function () use ($product, $data, $request, $old): void {
+            $this->lockProductBrandForAssignment($data['brand'] ?? null, $product->brand);
             $product->update($data);
 
             $this->images->storeMany($product, $request->file('images', []));
@@ -214,4 +220,21 @@ class AdminProductController extends Controller
         }
     }
 
+    private function lockProductBrandForAssignment(?string $brand, ?string $currentBrand = null): void
+    {
+        if ($brand === null || $brand === $currentBrand) {
+            return;
+        }
+
+        $lockedBrand = ProductBrand::query()
+            ->where('name', $brand)
+            ->lockForUpdate()
+            ->first();
+
+        if ($lockedBrand === null) {
+            throw ValidationException::withMessages([
+                'brand' => __('validation.exists', ['attribute' => __('admin.brand')]),
+            ]);
+        }
+    }
 }

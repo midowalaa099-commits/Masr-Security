@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,6 +20,11 @@ class UpdateProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $product = $this->route('product');
+        $brandRule = $product instanceof Product && $this->input('brand') === $product->brand
+            ? Rule::in([$product->brand])
+            : Rule::exists('product_brands', 'name');
+
         return [
             'category_id' => ['nullable', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($this->product)],
@@ -27,7 +33,7 @@ class UpdateProductRequest extends FormRequest
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($this->product)],
             'description_ar' => ['nullable', 'string'],
             'description_en' => ['nullable', 'string'],
-            'brand' => ['nullable', 'string', 'max:100'],
+            'brand' => ['nullable', 'string', 'max:100', $brandRule],
             'model_number' => ['nullable', 'string', 'max:100'],
             'price' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'max:999999999', 'lt:price'],

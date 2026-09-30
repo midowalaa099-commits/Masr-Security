@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPackageController;
 use App\Http\Controllers\Admin\AdminPaymentController;
+use App\Http\Controllers\Admin\AdminProductBrandController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminQuoteController;
 use App\Http\Controllers\Admin\AdminSettingsController;
@@ -130,6 +131,8 @@ Route::prefix('admin')
 
         Route::resource('categories', AdminCategoryController::class)->except(['show']);
         Route::patch('categories/{category}/toggle', [AdminCategoryController::class, 'toggle'])->name('categories.toggle');
+
+        Route::resource('brands', AdminProductBrandController::class)->only(['index', 'store', 'destroy']);
 
         Route::get('pricing', [AdminBulkPricingController::class, 'index'])->name('pricing.index');
         Route::post('pricing', [AdminBulkPricingController::class, 'store'])->name('pricing.store');

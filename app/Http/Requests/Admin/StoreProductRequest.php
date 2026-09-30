@@ -27,7 +27,7 @@ class StoreProductRequest extends FormRequest
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')],
             'description_ar' => ['nullable', 'string'],
             'description_en' => ['nullable', 'string'],
-            'brand' => ['nullable', 'string', 'max:100'],
+            'brand' => ['nullable', 'string', 'max:100', Rule::exists('product_brands', 'name')],
             'model_number' => ['nullable', 'string', 'max:100'],
             'price' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'max:999999999', 'lt:price'],

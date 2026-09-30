@@ -31,7 +31,7 @@ class ProductFactory extends Factory
             'slug' => Str::slug($name),
             'description_ar' => fake()->paragraph(),
             'description_en' => fake()->paragraph(),
-            'brand' => fake()->randomElement(['Hikvision', 'Dahua', 'Uniview']),
+            'brand' => fake()->randomElement(['Hikvision', 'HiLook', 'EZVIZ']),
             'model_number' => fake()->bothify('DS-####-###'),
             'price' => fake()->randomFloat(2, 500, 20000),
             'sale_price' => null,

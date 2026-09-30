@@ -53,11 +53,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                    <x-input-label for="brand" :value="__('admin.brand')" />
-                    <x-text-input id="brand" name="brand" class="mt-1 block w-full" :value="old('brand', $product->brand)" />
-                    <x-input-error :messages="$errors->get('brand')" class="mt-2" />
-                </div>
+                <x-admin.product-brand-selector :brands="$brands" :value="$product->brand" />
                 <div>
                     <x-input-label for="model_number" :value="__('admin.model_number')" />
                     <x-text-input id="model_number" name="model_number" class="mt-1 block w-full" :value="old('model_number', $product->model_number)" />
